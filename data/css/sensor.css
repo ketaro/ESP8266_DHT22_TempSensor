@@ -1,0 +1,219 @@
+body {
+    background-color: #f5f7fa;
+    font-family: "Source Sans Pro", sans-serif;
+    color: #464646;
+    font-size: 1.2em;
+}
+
+.content-title {
+    border-bottom: 1px solid #cfdbe2;
+    line-height: 1.1;
+    font-size: 1.5em;
+}
+
+h3 small {
+    font-weight: normal;
+    color: #9e9e9e;
+    font-size: 0.75em;
+}
+
+.layout-fixed {
+    margin-top: 0;
+    margin-left: 0;
+}
+.wrapper {
+    position: relative;
+}
+
+.tabcontent {
+    display: none;
+    animation: fadeEffect 1s;
+}
+
+.watermark {
+    fill: #d0d0d04a;
+    position: fixed;
+    bottom: -100px;
+    right: -100px;
+}
+.watermark svg {
+    font-size: 500px;
+    height: 500px;
+    width: 500px;
+}
+
+/* Go from zero to full opacity */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+.icon-connection {
+  width: 1.25em;
+}
+
+nav {
+    background-color: #3a3f51;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: 100%;
+    padding-bottom: 20px;
+    padding-top: 10px;
+}
+
+nav ul {
+    position: relative;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+    margin-top: 0;
+    display: block;
+}
+
+nav ul li {
+    border-left: 3px solid transparent;
+    margin-bottom: 20px;
+    width: 85px;
+    position: relative;
+    display: block;
+    text-align: center;
+}
+
+nav ul li a {
+    color: #e3e3e3;
+    padding: 20px 0;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+nav .icon {
+    font-size: 40px;
+    color: #c0c0c0;
+    width: 50px;
+    fill: white;
+    padding-bottom: 5px;
+}
+
+section {
+    padding-top: 5px;
+    padding-left: 15px;
+    margin-left: 103px;
+    position: relative;
+    height: 100%;
+    display: block;
+}
+
+#footer {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    padding-left: 113px;
+    font-size: 0.7em;
+    color: aaa;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.79);
+    width: 100%;
+    height: 40px;
+    padding-top: 5px;
+    border-top: 1px solid #cfdbe2;
+}
+#footer .pull-right {
+    margin-right: 123px;
+}
+
+.layout-fixed .wrapper {
+  /* only applied to sidebar */
+}
+.layout-fixed .wrapper .topnavbar-wrapper {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 121;
+}
+.layout-fixed .wrapper > aside {
+  position: fixed;
+  z-index: 100;
+}
+.layout-fixed .wrapper > .aside {
+  /* safari fix */
+  height: 1px;
+  min-height: 100%;
+  /* ios blanks space fix */
+}
+.layout-fixed .wrapper > .aside > .aside-inner {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+}
+
+.pull-right {
+    float: right!important;
+}
+
+.reading {
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    color: #264dda;
+}
+.description {
+    text-align: center;
+    font-size: 16px;
+}
+
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+.col3 {
+    width: 26%;
+    position: relative;
+    padding-right: 15px;
+    padding-left: 15px;
+    float: left;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+.form-group label {
+    display: inline-block;
+    position: relative;
+    width: 200px;
+    text-align: right;
+    font-size: 0.9em;
+}
+.form-group input,select {
+    position: relative;
+    width: 45%;
+    line-height: 1.43;
+    height: 35px;
+    font-size: 14px;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.form-group .btn {
+    margin-left: 205px;
+}
+.btn {
+    border-radius: 4px;
+    font-size: 0.75em;
+    background-color: #337ab7;
+    color: white;
+    padding: 8px 22px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+.btn-danger {
+    background-color: #920000;
+}
