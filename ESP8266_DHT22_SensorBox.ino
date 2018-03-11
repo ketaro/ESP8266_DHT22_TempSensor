@@ -59,7 +59,7 @@ int poll_sensor_interval = 5000;    // 5 seconds
 int next_sensor_poll = poll_sensor_interval;
 int send_to_db_interval = 30000;    // 30 seconds
 int next_send_to_db = send_to_db_interval;
-int network_check_interval = 60*5;  // 5 minutes
+int network_check_interval = 60*5000;  // 5 minutes
 int next_network_check = network_check_interval;
 
 // Influx/HTTPClient globals
