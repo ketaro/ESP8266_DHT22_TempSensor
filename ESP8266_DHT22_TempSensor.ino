@@ -173,7 +173,7 @@ void wifiInit() {
   
   // If WiFi Connection failed in the first ATTEMPTS*5 seconds of
   // init, we'll start an AP
-  if (!networkOK) {
+  if (!networkOK()) {
     Serial.println("WiFi Connection failed, Starting AP...");
 
     // Start the access point
