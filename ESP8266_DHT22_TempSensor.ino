@@ -177,6 +177,7 @@ void wifiInit() {
     Serial.println("WiFi Connection failed, Starting AP...");
 
     // Start the access point
+    WiFi.mode(WIFI_AP);
     WiFi.softAP(apssid.c_str(), appass);
     ipaddr = WiFi.softAPIP().toString();
     Serial.println("AP:" + apssid + " Web config IP: http://" + WiFi.softAPIP().toString() + ":8080");
@@ -531,6 +532,9 @@ void loop() {
   if (now > next_network_check) {
     if (!networkOK())
       wifiConnect(ATTEMPTS);
+
+    if (!networkOK())
+      WiFi.mode(WIFI_AP);
 
     next_network_check = now + network_check_interval;
   }
