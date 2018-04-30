@@ -1,6 +1,6 @@
 # ESP8266 + DHT22 Temp Sensor
 
-Arduino code and assets for a basic wifi-enabled temperature sensors.
+Arduino code, assets, and 3d-printable case for a basic wifi-enabled temperature sensors.
 
 Some things to get you started:
 
