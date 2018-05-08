@@ -1,10 +1,13 @@
 #include <DHT.h>
-#include <EEPROM.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <FS.h>
+
+#include "defaults.h"
+#include "Config.h"
+
 
 // CH340 Chipset Driver
 // https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver
@@ -18,52 +21,6 @@
 // Web Server / SPIFFS inspired by
 // https://circuits4you.com/2018/02/03/esp8266-nodemcu-adc-analog-value-on-dial-gauge/
 //
-
-#define INO_VERSION              "0.3.0"
-#define CONFIG_VERSION           3
-#define EEPROM_SIZE              512
-#define EEPROM_CONFIG_START      0
-#define DEFAULT_HOSTNAME         "esp-dht-1"
-#define DEFAULT_HTTP_PORT        8080
-#define DEFAULT_SAMPLE_INTERVAL  60
-#define DEFAULT_SSID             "SightUnseenFarm"
-#define DEFAULT_WIFI_PW          "PASSWORD"
-
-#define DB_TYPE_NONE       0
-#define DB_TYPE_INFLUXDB   1
-#define DB_TYPE_POSTGRESQL 2
-
-
-// EEPROM Configuration Structure
-struct configuration {
-  unsigned int version;
-
-  // System Settings
-  char hostname[20];
-  char location[20];
-  unsigned short http_server_port;
-  char http_pw[20];
-
-  // Network Settings
-  char ssid[32];
-  char wifi_pass[64];
-
-  // Database Settings
-  byte           db_type;             // 0 - none, 1 - influxdb
-  char           db_host[64];
-  unsigned short db_port;
-  char           db_name[20];
-  char           db_measurement[15];  // Measurement string
-
-  unsigned int sample_interval;
-
-};
-
-// Configuration Struct
-configuration defaults = { CONFIG_VERSION, DEFAULT_HOSTNAME, "unknown", DEFAULT_HTTP_PORT, "",  
-                           DEFAULT_SSID, DEFAULT_WIFI_PW,
-                           DB_TYPE_INFLUXDB, "influxdb", 8086, "temp", "ambient", DEFAULT_SAMPLE_INTERVAL  };
-configuration conf;
 
 
 
@@ -83,6 +40,7 @@ int next_send_to_db        = send_to_db_interval;
 int network_check_interval = 60*5000;  // 5 minutes
 int next_network_check     = network_check_interval;
 
+
 // Influx/HTTPClient globals
 String influx_url;
 HTTPClient http;
@@ -93,7 +51,7 @@ ESP8266WebServer server(8080); // Set the HTTP Server port here
 // WiFi Globals
 #define ATTEMPTS 5
 String apssid = "ESP-" + String(ESP.getChipId());
-const char *appass = "password";
+const char *appass = DEFAULT_WIFI_PW;
 String ipaddr;
 bool wifi_connected;
 
@@ -108,40 +66,7 @@ DHT dht(DHTPIN, DHTTYPE);
 //
 // C O N F I G S
 //
-void readConfig() {
-  unsigned int current_version;
-  
-  Serial.print( "READING CONFIG FROM EEPROM.  VERSION: " );
-
-  // Read the config version number from eeprom
-  EEPROM.get( EEPROM_CONFIG_START, current_version );
-  Serial.println( current_version, DEC );
-
-  // If config version is not something we can upgrade from,
-  // set a default config.
-  if ( current_version != 3 ) {
-    Serial.println( "Unsupported or no config found in EEPROM.  Resettings to defaults." );
-    conf = defaults;
-    writeConfig();
-  }
-
-  // Read EEPROMP into config struct
-  EEPROM.get( EEPROM_CONFIG_START, conf );
-}
-
-// Save the running config
-void writeConfig() {
-  Serial.print( "Clearing EEPROM, size: " );
-  Serial.println( EEPROM.length() );
-  for (int i = 0 ; i < EEPROM.length() ; i++) {
-    EEPROM.write(i, 0);
-  }
-  EEPROM.commit();
-  
-  Serial.println( "Writing config to EEPROM" );
-  EEPROM.put( EEPROM_CONFIG_START, conf );
-  EEPROM.commit();
-}
+Config config;
 
 
 //
@@ -220,13 +145,13 @@ void wifiInit() {
 // Attempt to connect to the SSID info in our config.
 void wifiConnect(int attempts) {
   WiFi.mode( WIFI_STA );
-  WiFi.hostname( conf.hostname );
-  WiFi.begin( conf.ssid, conf.wifi_pass );
+  WiFi.hostname( config.conf.hostname );
+  WiFi.begin( config.conf.ssid, config.conf.wifi_pw );
   wifi_connected = false;
 
   // Try *attempts* times to get on the network
   Serial.println( "Mac Address: " + WiFi.macAddress() );
-  Serial.print( "Connecting to WiFi (" + String(conf.ssid) + ")" );
+  Serial.print( "Connecting to WiFi (" + String(config.conf.ssid) + ")" );
   for ( int x=0; x < attempts; x++ ) {
     if ( WiFi.status() == WL_CONNECTED )
       break;
@@ -259,10 +184,10 @@ bool networkOK() {
 //
 void buildInfluxUrl() {
   influx_url = "http://" + 
-    String(conf.db_host) + ":" + 
-    String(conf.db_port) +
+    String(config.conf.db_host) + ":" + 
+    String(config.conf.db_port) +
     "/write?db=" + 
-    String(conf.db_name);
+    String(config.conf.db_name);
 }
 
 void influxInit() {
@@ -273,20 +198,20 @@ void influxInit() {
   http.begin(influx_url);
   
   // Print the influx server info
-  Serial.println("Influx Server: " + String(conf.db_host) + ":" + String(conf.db_port));
+  Serial.println("Influx Server: " + String(config.conf.db_host) + ":" + String(config.conf.db_port));
 }
 
 
 uint16_t influxDBSend() {
   // Build the POST
   String influxout;
-  influxout = "ambient,host=" + String(conf.hostname) + 
-              ",location=" + String(conf.location) + 
+  influxout = "ambient,host=" + String(config.conf.hostname) + 
+              ",location=" + String(config.conf.location) + 
               " temperature=" + cur_temp + 
               ",humidity=" + cur_humidity + 
               ",heat_index=" + cur_hindex;
 
-  Serial.println( "[InfluxDB] " + String(conf.db_host) + ":" + String(conf.db_port) );
+  Serial.println( "[InfluxDB] " + String(config.conf.db_host) + ":" + String(config.conf.db_port) );
   Serial.println( "[InfluxDB] " + String(influxout) );
               
   // POST the POST and return the result
@@ -322,7 +247,7 @@ void sendToDatabase() {
 //
 
 void httpInit() {
-  Serial.println( "HTTP INIT, hostname: " + String( conf.hostname ) + "  port: " + String( conf.http_server_port ) );
+  Serial.println( "HTTP INIT, hostname: " + String( config.conf.hostname ) + "  port: " + String( config.conf.http_server_port ) );
 //  MDNS.begin( conf.hostname );
   server.on("/",         HTTP_GET,  handleWebRequests);
   server.on("/config",   HTTP_GET,  jsonConfigData);
@@ -407,30 +332,9 @@ void jsonSensorData() {
 // GET /config
 // Return a JSON string of the current settings
 void jsonConfigData() {
-  bool wifiPassSaved = false;
-
-  if (String(conf.wifi_pass).length() > 0)
-    wifiPassSaved = true;
+    
+  String jsonstr = config.JSON( String(WiFi.macAddress()) );
   
-  
-  String jsonstr = "{\"ver\": \"" + String(conf.version) + "\", " 
-                   "\"ino_ver\": \"" + INO_VERSION + "\", "
-                   "\"mac\": \"" + String(WiFi.macAddress()) + "\", "
-                   "\"hostname\": \"" + String(conf.hostname) + "\", "
-                   "\"db\": {"
-                       "\"dbname\": \"" + String(conf.db_name) + "\", "
-                       "\"host\": \"" + String(conf.db_host) + "\", "
-                       "\"location\": \"" + String(conf.location) + "\", "
-                       "\"measurement\": \"" + String(conf.db_measurement) + "\", "
-                       "\"type\": \"influx\", "
-                       "\"port\": \"" + String(conf.db_port) + "\""
-                       "}, "
-                   "\"net\": {"
-                       "\"ssid\": \"" + String(conf.ssid) + "\", "
-                       "\"pw\": \"" + String(wifiPassSaved) + "\""
-                       "}"
-                   "}";
-
   httpReturn(200, "application/json", jsonstr);
 
 }
@@ -445,8 +349,7 @@ void processConfigReset() {
   }
 
   // Write defaults to the config
-  conf = defaults;
-  writeConfig();
+  config.resetConfig();
   
   httpReturn(200, "application/json", "{\"status\": \"ok\"}");
 
@@ -464,14 +367,14 @@ void processSettings() {
   
   // Update config with values from form
   // TODO: Better error checking
-  strcpy(conf.db_host,          server.arg("db_host").c_str());
+  strcpy(config.conf.db_host,          server.arg("db_host").c_str());
 
   // TODO: CONVERT STRING TO INT
-  //strcpy(conf.db_port,          server.arg("db_port").c_str());
-  strcpy(conf.db_name,          server.arg("db_name").c_str());
-  strcpy(conf.db_measurement,   server.arg("db_measurement").c_str());
-  strcpy(conf.location,         server.arg("location").c_str());
-  writeConfig();
+  //strcpy(config.conf.db_port,          server.arg("db_port").c_str());
+  strcpy(config.conf.db_name,          server.arg("db_name").substring(0, 20).c_str());
+  strcpy(config.conf.db_measurement,   server.arg("db_measurement").c_str());
+  strcpy(config.conf.location,         server.arg("location").c_str());
+  config.writeConfig();
 
   // Update the influx URL and re-init the Influx connection
   buildInfluxUrl();
@@ -490,22 +393,18 @@ void processNetworkSettings() {
   }
 
   // Update config with values from form
-  // TODO: Better error checking
-  strcpy( conf.ssid, server.arg("ssid").c_str() );
-  strcpy( conf.hostname, server.arg("hostname").c_str() );
+  config.set( CONFIG_SSID, server.arg("ssid") );
+  config.set( CONFIG_HOSTNAME, server.arg("hostname") );
 
   // Only change the wifi password if one was passed
   if ( server.arg("wifi_pw").length() > 0 )
-    strcpy( conf.wifi_pass, server.arg("wifi_pw").c_str() );
-
-  writeConfig();
+    config.set( CONFIG_WIFI_PW, server.arg("wifi_pw") );
 
   // Success to the client.
   httpReturn( 200, "application/json", "{\"status\": \"ok\"}" );
 
-  // Reconfigure WiFi
-  Serial.println( "WiFi settings changed!" );
-  wifiInit();
+  // Save the running config (this will reboot the device)
+  config.writeConfig();
 }
 
 
@@ -520,16 +419,10 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   
-  // init EEPROM, all 512 bytes
-  EEPROM.begin( EEPROM_SIZE );
-
   // Initialize File System
   SPIFFS.begin();
   Serial.println("File System Initialized");
   
-  // Read in the config
-  readConfig();
-
   // Turn on DHT22
   sensorOn();
   

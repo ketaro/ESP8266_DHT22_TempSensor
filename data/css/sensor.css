@@ -35,6 +35,7 @@ h3 small {
     position: fixed;
     bottom: -100px;
     right: -100px;
+    z-index: -500;
 }
 .watermark svg {
     font-size: 500px;
