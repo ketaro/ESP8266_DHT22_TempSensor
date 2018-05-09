@@ -44,7 +44,7 @@ void Config::readConfig() {
 // Update a value in the running config (does not commit)
 // Truncates strings that exceed the max length for any field.
 bool Config::set( int key, String value ) {
-  Serial.print( "Config::set( " + String(key) + ", " + value + ")" );
+  Serial.println( "Config::set( " + String(key) + ", " + value + ")" );
 
   switch( key ) {
     case CONFIG_HOSTNAME:
@@ -57,7 +57,34 @@ bool Config::set( int key, String value ) {
       strcpy( conf.wifi_pw, value.substring(0, MAX_WIFI_PW).c_str() );
       break;
 
-    
+    case CONFIG_DB_HOST:
+      strcpy( conf.db_host, value.substring(0, MAX_DB_HOST).c_str() );
+      break;
+
+    case CONFIG_DB_PORT:
+      // Convert string to int.  Valid port range 1 - 65535
+      long port;
+      port = value.toInt();
+
+      if ( port > 0 && port < 65535 )
+        conf.db_port = port;
+      else
+        return false;
+
+    case CONFIG_SAMPLE_INTERVAL:
+      // Convert string to int.  Valid range 1 - 86400
+      long interval;
+      interval = value.toInt();
+
+      if ( interval > 0 && interval <= 86400 )
+        conf.sample_interval = interval;
+      else
+        return false;
+
+    case CONFIG_DB_MEASUREMENT:
+      strcpy( conf.db_measurement, value.substring(0, MAX_DB_MEASUREMENT).c_str() );
+      break;
+        
     default:
       return false;
   }
@@ -104,12 +131,13 @@ String Config::JSON(String macaddr) {
                    "\"mac\": \"" + macaddr + "\", "
                    "\"hostname\": \"" + String(conf.hostname) + "\", "
                    "\"db\": {"
-                       "\"dbname\": \"" + String(conf.db_name) + "\", "
-                       "\"host\": \"" + String(conf.db_host) + "\", "
+                       "\"db_name\": \"" + String(conf.db_name) + "\", "
+                       "\"db_host\": \"" + String(conf.db_host) + "\", "
                        "\"location\": \"" + String(conf.location) + "\", "
-                       "\"measurement\": \"" + String(conf.db_measurement) + "\", "
+                       "\"db_measurement\": \"" + String(conf.db_measurement) + "\", "
                        "\"type\": \"influx\", "
-                       "\"port\": \"" + String(conf.db_port) + "\""
+                       "\"db_port\": \"" + String(conf.db_port) + "\", "
+                       "\"interval\": \"" + String(conf.sample_interval) + "\""
                        "}, "
                    "\"net\": {"
                        "\"ssid\": \"" + String(conf.ssid) + "\", "

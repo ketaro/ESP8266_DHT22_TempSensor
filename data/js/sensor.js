@@ -19,21 +19,22 @@ function updateNetworkConfig(data) {
         $('input[name=wifi_pw]').attr('placeholder', "Saved.  Update to change.");
 }
 
+
 function updateSettingsConfig(data) {
-    if (data.hasOwnProperty('dbname'))
-        $('input[name=influx_dbname]').val( data['dbname'] );
+    if (data.hasOwnProperty('db_name'))
+        $('input[name=db_name]').val( data['db_name'] );
 
-    if (data.hasOwnProperty('host'))
-        $('input[name=influx_host]').val( data['host'] );
+    if (data.hasOwnProperty('db_host'))
+        $('input[name=db_host]').val( data['db_host'] );
 
-    if (data.hasOwnProperty('port'))
-        $('input[name=influx_port]').val( data['port'] );
+    if (data.hasOwnProperty('db_port'))
+        $('input[name=db_port]').val( data['db_port'] );
 
-    if (data.hasOwnProperty('measurement'))
-        $('input[name=influx_measurement]').val( data['measurement'] );
+    if (data.hasOwnProperty('db_measurement'))
+        $('input[name=db_measurement]').val( data['db_measurement'] );
 
     if (data.hasOwnProperty('location'))
-        $('input[name=influx_location]').val( data['location'] );
+        $('input[name=location]').val( data['location'] );
 }
 
 
@@ -103,11 +104,11 @@ function saveSettings() {
     
     var data = {
         db_type: $('select[name=dbtype]').val(),
-        influx_server: $('input[name=influx_host]').val(),
-        influx_port: $('input[name=influx_port]').val(),
-        influx_db: $('input[name=influx_dbname]').val(),
-        influx_measurement: $('input[name=influx_measurement]').val(),
-        influx_location: $('input[name=influx_location]').val(),
+        db_host: $('input[name=db_host]').val(),
+        db_port: $('input[name=db_port]').val(),
+        db_name: $('input[name=db_name]').val(),
+        db_measurement: $('input[name=db_measurement]').val(),
+        location: $('input[name=location]').val(),
         interval: $('select[name=interval]').val(),
     }
     

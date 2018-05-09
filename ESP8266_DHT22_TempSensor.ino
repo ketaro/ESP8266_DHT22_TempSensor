@@ -1,6 +1,7 @@
 #include <DHT.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <FS.h>
@@ -8,20 +9,39 @@
 #include "defaults.h"
 #include "Config.h"
 
-
-// CH340 Chipset Driver
-// https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver
-//
-// Add Board Manager URL in Arduino IDE
-// http://arduino.esp8266.com/stable/package_esp8266com_index.json
-//
-// Plugin for uploading SPIFFS
-// https://github.com/esp8266/arduino-esp8266fs-plugin
-//
-// Web Server / SPIFFS inspired by
-// https://circuits4you.com/2018/02/03/esp8266-nodemcu-adc-analog-value-on-dial-gauge/
-//
-
+/*
+ *  ESP8266+DHT22 Temperature Sensor
+ *  Nick Avgerinos - http://github.com/ketaro
+ *  Tyler Eaton - https://github.com/googlegot
+ *
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ *
+ *  CH340 Chipset Driver (for OSX)
+ *  https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver
+ *
+ *  Add Board Manager URL in Arduino IDE
+ *  http://arduino.esp8266.com/stable/package_esp8266com_index.json
+ *
+ *  Plugin for uploading SPIFFS
+ *  https://github.com/esp8266/arduino-esp8266fs-plugin
+ *
+ *  Web Server / SPIFFS inspired by:
+ *  https://circuits4you.com/2018/02/03/esp8266-nodemcu-adc-analog-value-on-dial-gauge/
+ * 
+ *  OTA Update
+ *  http://esp8266.github.io/Arduino/versions/2.0.0/doc/ota_updates/ota_updates.html
+ *
+ */
 
 
 //
@@ -46,7 +66,8 @@ String influx_url;
 HTTPClient http;
 
 // HTTP Server Globals
-ESP8266WebServer server(8080); // Set the HTTP Server port here
+ESP8266WebServer        server(8080);   // Set the HTTP Server port here
+ESP8266HTTPUpdateServer httpUpdater;  // OTA Update Service
 
 // WiFi Globals
 #define ATTEMPTS 5
@@ -256,6 +277,9 @@ void httpInit() {
   server.on("/sensors",  HTTP_GET,  jsonSensorData);
   server.on("/settings", HTTP_POST, processSettings);
   server.onNotFound(handleWebRequests);
+
+  // Attach the OTA update service
+  httpUpdater.setup( &server );
   
   server.begin();
 //  MDNS.addService( "http", "tcp", conf.http_server_port );
@@ -366,22 +390,18 @@ void processSettings() {
   }
   
   // Update config with values from form
-  // TODO: Better error checking
-  strcpy(config.conf.db_host,          server.arg("db_host").c_str());
-
-  // TODO: CONVERT STRING TO INT
-  //strcpy(config.conf.db_port,          server.arg("db_port").c_str());
-  strcpy(config.conf.db_name,          server.arg("db_name").substring(0, 20).c_str());
-  strcpy(config.conf.db_measurement,   server.arg("db_measurement").c_str());
-  strcpy(config.conf.location,         server.arg("location").c_str());
-  config.writeConfig();
-
-  // Update the influx URL and re-init the Influx connection
-  buildInfluxUrl();
-  influxInit();
+  config.set( CONFIG_DB_HOST,         server.arg("db_host") );
+  config.set( CONFIG_DB_PORT,         server.arg("db_port") );
+  config.set( CONFIG_DB_NAME,         server.arg("db_name") );
+  config.set( CONFIG_DB_MEASUREMENT,  server.arg("db_measurement") );
+  config.set( CONFIG_LOCATION,        server.arg("location") );
+  config.set( CONFIG_SAMPLE_INTERVAL, server.arg("interval") );
 
   // Success to the client.
   httpReturn(200, "application/json", "{\"status\": \"ok\"}");
+
+  // This will cause a reboot
+  config.writeConfig();
 }
 
 

@@ -22,15 +22,16 @@
 #define DB_TYPE_INFLUXDB   1
 #define DB_TYPE_POSTGRESQL 2
 
-#define CONFIG_HOSTNAME       1
-#define CONFIG_LOCATION       2
-#define CONFIG_HTTP_PW        3
-#define CONFIG_SSID           4
-#define CONFIG_WIFI_PW        5
-#define CONFIG_DB_HOST        6
-#define CONFIG_DB_NAME        7
-#define CONFIG_DB_MEASUREMENT 8
-
+#define CONFIG_HOSTNAME        1
+#define CONFIG_LOCATION        2
+#define CONFIG_HTTP_PW         3
+#define CONFIG_SSID            10
+#define CONFIG_WIFI_PW         11
+#define CONFIG_DB_HOST         20
+#define CONFIG_DB_PORT         21
+#define CONFIG_DB_NAME         22
+#define CONFIG_DB_MEASUREMENT  23
+#define CONFIG_SAMPLE_INTERVAL 24
 
 #define MAX_HOSTNAME  20
 #define MAX_LOCATION  20
@@ -39,7 +40,7 @@
 #define MAX_WIFI_PW   32
 #define MAX_DB_HOST   64
 #define MAX_DB_NAME   20
-#define MAX_DB_MEASUREMENT 15
+#define MAX_DB_MEASUREMENT 20
 
 // EEPROM Configuration Structure
 struct configuration {
