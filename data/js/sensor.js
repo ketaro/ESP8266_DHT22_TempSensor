@@ -1,3 +1,5 @@
+usehost = "";
+
 function handleNavClick(e) {
     var selectedTab = $(this).data('tab');
     
@@ -8,6 +10,8 @@ function handleNavClick(e) {
 
 function displayAlert(msg) {
     console.log('[alert] ' + msg);
+    $('#alert').html(msg);
+    $('#alert').show();
 }
 
 function updateNetworkConfig(data) {
@@ -44,8 +48,7 @@ function updateSettingsConfig(data) {
 // Read System Config
 function getConfigData() {
     $.ajax({
-//         url: "http://10.0.80.157:8080/config",
-        url: "/config",
+        url: usehost + "/config",
         dataType: 'json',
     }).done(function( data ) {
         console.log(data);
@@ -79,7 +82,7 @@ function getConfigData() {
 // Read Sensor Values
 function getSensorReading() {
     $.ajax({
-        url: "/sensors",
+        url: usehost + "/sensors",
         dataType: 'json',
     }).done(function( data ) {
         console.log(data);
@@ -104,6 +107,8 @@ function getSensorReading() {
 
 function saveSettings() {
     $('#btn_settingsSave').prop("disabled", true);
+    $('#btn_settingsSave').data('origtext', $('#btn_settingsSave').html());
+    $('#btn_settingsSave').html("Saving...");
     
     var data = {
         db_type: $('select[name=dbtype]').val(),
@@ -116,75 +121,85 @@ function saveSettings() {
     }
     
     $.ajax({
-        url: "/settings",
+        url: usehost + "/settings",
         type: "POST",
         data: data
     }).done(function (data) {
         $('#btn_settingsSave').prop("disabled", false);
+        $('#btn_settingsSave').html($('#btn_settingsSave').data('origtext'));
 
         // Reload Data
         getConfigData();
     }).fail(function( data ) {
         $('#btn_settingsSave').prop("disabled", false);
+        $('#btn_settingsSave').html($('#btn_settingsSave').data('origtext'));
         displayAlert('Error Saving Settings');
     });
 }
 
 function saveNetwork() {
     $('#btn_networkSave').prop("disabled", true);
-    
+    $('#btn_networkSave').data('origtext', $('#btn_networkSave').html());
+    $('#btn_networkSave').html("Saving...");
+
     var data = {
         ssid: $('input[name=ssid]').val(),
         wifi_pw: $('input[name=wifi_pw]').val(),
         network_type: $('select[name=network_type]').val(),
         hostname: $('input[name=hostname]').val(),
     }
-    
+
     $.ajax({
-        url: "/network",
+        url: usehost + "/network",
         type: "POST",
         data: data
     }).done(function (data) {
         $('#btn_networkSave').prop("disabled", false);
+        $('#btn_networkSave').html($('#btn_networkSave').data('origtext'));
 
         // Reload Data
         getConfigData();
     }).fail(function( data ) {
         $('#btn_networkSave').prop("disabled", false);
-        displayAlert('Error Saving Network Settings');
+        $('#btn_networkSave').html($('#btn_networkSave').data('origtext'));
+        displayAlert('Error Saving Network Settings!');
     });    
 }
 
 function factoryReset() {
     $('#btn_factoryReset').prop("disabled", true);
-    
+    $('#btn_factoryReset').data('origtext', $('#btn_factoryReset').html());
+    $('#btn_factoryReset').html("Requesting Reset...");
+
     // TODO: Maybe add a confirmation?
     $.ajax({
-        url: "/reset",
+        url: usehost + "/reset",
         type: "POST",
         data: { reset: 1 }
     }).done(function (data) {
         $('#btn_factoryReset').prop("disabled", false);
+        $('#btn_factoryReset').html($('#btn_factoryReset').data('origtext'));
 
         // Reload Data
         getConfigData();
     }).fail(function( data ) {
         $('#btn_factoryReset').prop("disabled", false);
-        displayAlert('Error Saving Network Settings');
+        $('#btn_factoryReset').html($('#btn_factoryReset').data('origtext'));
+        displayAlert('Error Requesting Factory Reset');
     });    
-    
+
 }
 
 
 (function() {
     $('nav a').click(handleNavClick);
     $('nav a.default').click();
-    
+
     // button listeners
     $('#btn_settingsSave').click(saveSettings);
     $('#btn_networkSave').click(saveNetwork);
     $('#btn_factoryReset').click(factoryReset);
-    
+
     getConfigData();
     getSensorReading();
 })();

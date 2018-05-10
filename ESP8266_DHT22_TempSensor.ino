@@ -355,6 +355,9 @@ void processNetworkSettings() {
   // Save the running config
   config.writeConfig();
 
+  // Wait a bit before disconnecting/reconnecting
+  delay(2000);
+
   // Disconnect the wifi and re-run the setup routine
   WiFi.disconnect( true );
   setup();
