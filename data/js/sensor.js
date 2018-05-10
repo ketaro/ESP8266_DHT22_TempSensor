@@ -10,7 +10,7 @@ function handleNavClick(e) {
 
 function displayAlert(msg) {
     console.log('[alert] ' + msg);
-    $('#alert').html(msg);
+    $('#alert p').html(msg);
     $('#alert').show();
 }
 
@@ -199,6 +199,7 @@ function factoryReset() {
     $('#btn_settingsSave').click(saveSettings);
     $('#btn_networkSave').click(saveNetwork);
     $('#btn_factoryReset').click(factoryReset);
+    $('#alert .close').click(function() { $('#alert').hide(); });
 
     getConfigData();
     getSensorReading();

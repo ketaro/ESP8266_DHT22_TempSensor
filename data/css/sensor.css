@@ -115,12 +115,37 @@ section {
 }
 
 #alert {
-    background-color: rgba(245, 247, 133, 0.88);
-    padding: 15px 30px;
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    border: 1px solid #0000002e;
+    
+    padding: 10px 30px;
     margin-bottom: 10px;
     font-family: "Source Sans Pro", sans-serif;
-    color: #464646;
-    font-size: 1.2em;
+    font-size: 1.0em;
+}
+
+button.close {
+    position: relative;
+    top: -2px;
+    right: -21px;
+    color: inherit;
+
+    -webkit-appearance: none;
+    padding: 0;
+    cursor: pointer;
+    background: 0 0;
+    border: 0;
+    
+    float: right;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
+    
+    text-shadow: 0 1px 0 #fff;
+    filter: alpha(opacity=20);
+    opacity: .2;
 }
 
 #footer {
