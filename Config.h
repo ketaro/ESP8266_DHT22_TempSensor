@@ -7,6 +7,7 @@
 #define Config_h
 
 #include "Arduino.h"
+#include "defaults.h"
 
 #define CONFIG_VERSION           4
 #define EEPROM_SIZE              512
@@ -17,10 +18,6 @@
 #define DEFAULT_SAMPLE_INTERVAL  60
 #define DEFAULT_SSID             "SightUnseenFarm"
 #define DEFAULT_WIFI_PW          "PASSWORD"
-
-#define DB_TYPE_NONE       0
-#define DB_TYPE_INFLUXDB   1
-#define DB_TYPE_POSTGRESQL 2
 
 #define CONFIG_HOSTNAME        1
 #define CONFIG_LOCATION        2
@@ -42,6 +39,8 @@
 #define MAX_DB_NAME   20
 #define MAX_DB_MEASUREMENT 20
 
+
+//
 // EEPROM Configuration Structure
 struct configuration {
   unsigned int version;
@@ -68,6 +67,8 @@ struct configuration {
 };
 
 
+//
+// Config Library Class
 class Config
 {
   public:
@@ -77,7 +78,7 @@ class Config
     void writeConfig();
     void resetConfig();
 
-    void(* reboot) (void) = 0;  // Jump to the beginning (not a full reset, but good enough...)
+    void reboot();
 
     String JSON(String macaddr);
 

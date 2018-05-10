@@ -35,6 +35,9 @@ function updateSettingsConfig(data) {
 
     if (data.hasOwnProperty('location'))
         $('input[name=location]').val( data['location'] );
+
+    if (data.hasOwnProperty('interval'))
+        $('select[name=interval]').val( data['interval'] );
 }
 
 

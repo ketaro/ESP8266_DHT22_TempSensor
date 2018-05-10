@@ -71,6 +71,10 @@ bool Config::set( int key, String value ) {
       else
         return false;
 
+    case CONFIG_DB_NAME:
+      strcpy( conf.db_name, value.substring(0, MAX_DB_NAME).c_str() );
+      break;
+
     case CONFIG_SAMPLE_INTERVAL:
       // Convert string to int.  Valid range 1 - 86400
       long interval;
@@ -84,8 +88,13 @@ bool Config::set( int key, String value ) {
     case CONFIG_DB_MEASUREMENT:
       strcpy( conf.db_measurement, value.substring(0, MAX_DB_MEASUREMENT).c_str() );
       break;
-        
+
+    case CONFIG_LOCATION:
+      strcpy( conf.location, value.substring(0, MAX_LOCATION).c_str() );
+      break;
+
     default:
+      Serial.println( "[Config::set] Unknown config key: " + String(key) + " = " + value );
       return false;
   }
 
@@ -106,9 +115,6 @@ void Config::writeConfig() {
   Serial.println( "Writing config to EEPROM" );
   EEPROM.put( EEPROM_CONFIG_START, conf );
   EEPROM.commit();
-
-  // Reboot!
-  reboot();
 }
 
 

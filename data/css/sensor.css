@@ -23,6 +23,7 @@ h3 small {
 }
 .wrapper {
     position: relative;
+    margin-bottom: 50px;
 }
 
 .tabcontent {

@@ -1,14 +1,3 @@
-#include <DHT.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include <FS.h>
-
-#include "defaults.h"
-#include "Config.h"
-
 /*
  *  ESP8266+DHT22 Temperature Sensor
  *  Nick Avgerinos - http://github.com/ketaro
@@ -43,27 +32,34 @@
  *
  */
 
+#include <DHT.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <FS.h>
+
+#include "defaults.h"
+#include "Config.h"
+#include "DB.h"
+
+
+
+//
+// Helper Classes
+Config config;
+DB db;
 
 //
 // GLOBALS
 //
-
-// DHT22 Globals
-#define DHTPWR D3
-#define DHTPIN D4
-#define DHTTYPE DHT22
-
 int poll_sensor_interval   = 5000;    // 5 seconds
 int next_sensor_poll       = poll_sensor_interval;
 int send_to_db_interval    = 30000;    // 30 seconds
 int next_send_to_db        = send_to_db_interval;
 int network_check_interval = 60*5000;  // 5 minutes
 int next_network_check     = network_check_interval;
-
-
-// Influx/HTTPClient globals
-String influx_url;
-HTTPClient http;
 
 // HTTP Server Globals
 ESP8266WebServer        server(8080);   // Set the HTTP Server port here
@@ -81,13 +77,6 @@ String cur_temp;
 String cur_humidity;
 String cur_hindex;
 DHT dht(DHTPIN, DHTTYPE);
-
-
-
-//
-// C O N F I G S
-//
-Config config;
 
 
 //
@@ -183,7 +172,7 @@ void wifiConnect(int attempts) {
   Serial.println();
 
   if ( WiFi.status() == WL_CONNECTED ) {
-    ipaddr = "IP: " + WiFi.localIP().toString();
+    ipaddr = WiFi.localIP().toString();
     Serial.println( "Connected to: " + WiFi.SSID() + "  IP: " + ipaddr );
     wifi_connected = true;
   }
@@ -198,69 +187,6 @@ bool networkOK() {
 
   return true;
 }
-
-
-//
-// I N F L U X D B
-//
-void buildInfluxUrl() {
-  influx_url = "http://" + 
-    String(config.conf.db_host) + ":" + 
-    String(config.conf.db_port) +
-    "/write?db=" + 
-    String(config.conf.db_name);
-}
-
-void influxInit() {
-  // Build the influx url
-  buildInfluxUrl();
-  
-  // Start the http connection
-  http.begin(influx_url);
-  
-  // Print the influx server info
-  Serial.println("Influx Server: " + String(config.conf.db_host) + ":" + String(config.conf.db_port));
-}
-
-
-uint16_t influxDBSend() {
-  // Build the POST
-  String influxout;
-  influxout = "ambient,host=" + String(config.conf.hostname) + 
-              ",location=" + String(config.conf.location) + 
-              " temperature=" + cur_temp + 
-              ",humidity=" + cur_humidity + 
-              ",heat_index=" + cur_hindex;
-
-  Serial.println( "[InfluxDB] " + String(config.conf.db_host) + ":" + String(config.conf.db_port) );
-  Serial.println( "[InfluxDB] " + String(influxout) );
-              
-  // POST the POST and return the result
-  return http.POST(influxout);
-}
-
-
-// Send sensor readings to database
-// (if the network is available!)
-void sendToDatabase() {
-  if (!networkOK()) {
-    Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + apssid +
-                   "  IP: " + ipaddr + " (" + WiFi.macAddress() + ")" );
-    return;
-  }
-
-  // TODO: Eventually this can be a DB type check
-  // when we support more thing that just InfluxDB  
-  uint16_t httpCode = influxDBSend();
-
-  // Parse the return
-  // Apparently HTTP Code 204 is successful for influxDB.
-  if (httpCode != HTTP_CODE_OK && httpCode != 204) {
-    Serial.println( "INFLUX HTTP ERROR: " + String(httpCode) );
-  }
-
-}
-
 
 
 //
@@ -397,11 +323,14 @@ void processSettings() {
   config.set( CONFIG_LOCATION,        server.arg("location") );
   config.set( CONFIG_SAMPLE_INTERVAL, server.arg("interval") );
 
+  config.writeConfig();
+
+  // Tell the DB to re-init with new settings
+  db.init( config );
+
   // Success to the client.
   httpReturn(200, "application/json", "{\"status\": \"ok\"}");
 
-  // This will cause a reboot
-  config.writeConfig();
 }
 
 
@@ -423,8 +352,12 @@ void processNetworkSettings() {
   // Success to the client.
   httpReturn( 200, "application/json", "{\"status\": \"ok\"}" );
 
-  // Save the running config (this will reboot the device)
+  // Save the running config
   config.writeConfig();
+
+  // Disconnect the wifi and re-run the setup routine
+  WiFi.disconnect( true );
+  setup();
 }
 
 
@@ -444,6 +377,7 @@ void setup() {
   Serial.println("File System Initialized");
   
   // Turn on DHT22
+  send_to_db_interval = config.conf.sample_interval * 1000;
   sensorOn();
   
   // Initialize WiFi
@@ -454,10 +388,10 @@ void setup() {
 
   // Start the temperature sensor
   dht.begin();
-/*
-  // Initialize the influxdb connection
-  influxInit();
-*/
+
+  // Initialize the database library
+  db.init( config );
+
 }
 
 
@@ -472,12 +406,17 @@ void loop() {
     next_sensor_poll = now + poll_sensor_interval;
   }
 
-/*
   if (now > next_send_to_db) {  // Time to send readings to the db
-    sendToDatabase();
+    if (networkOK()) {  // Can't send if we're not connected
+      db.send( cur_temp, cur_humidity, cur_hindex );
+    } else {
+      Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + apssid +
+                     "  IP: " + ipaddr + " (" + WiFi.macAddress() + ")" );
+    }
     next_send_to_db = now + send_to_db_interval;
   }
-*/
+
+  // Network check to see if we're still connected to wifi
   if ( now > next_network_check ) {
     if ( !networkOK() )
       wifiConnect( ATTEMPTS );
