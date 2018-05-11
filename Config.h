@@ -18,6 +18,7 @@
 #define DEFAULT_SAMPLE_INTERVAL  60
 #define DEFAULT_SSID             "SightUnseenFarm"
 #define DEFAULT_WIFI_PW          "PASSWORD"
+#define DEFAULT_HTTP_PW          "admin"
 
 #define CONFIG_HOSTNAME        1
 #define CONFIG_LOCATION        2
@@ -86,7 +87,7 @@ class Config
 
 
   private:
-    configuration _defaults = { CONFIG_VERSION, DEFAULT_HOSTNAME, "unknown", DEFAULT_HTTP_PORT, "",  
+    configuration _defaults = { CONFIG_VERSION, DEFAULT_HOSTNAME, "unknown", DEFAULT_HTTP_PORT, DEFAULT_HTTP_PW,
                                 DEFAULT_SSID, DEFAULT_WIFI_PW,
                                 DB_TYPE_INFLUXDB, "influxdb", 8086, "temp", "ambient", DEFAULT_SAMPLE_INTERVAL  };    
 

@@ -64,6 +64,8 @@ int next_network_check     = network_check_interval;
 // HTTP Server Globals
 ESP8266WebServer        server(8080);   // Set the HTTP Server port here
 ESP8266HTTPUpdateServer httpUpdater;  // OTA Update Service
+const char* auth_realm    = "ESP8266 TempSensor";
+String auth_fail_response = "Authentication Failed";
 
 // WiFi Globals
 #define ATTEMPTS 5
@@ -205,15 +207,29 @@ void httpInit() {
   server.onNotFound(handleWebRequests);
 
   // Attach the OTA update service
-  httpUpdater.setup( &server );
+  httpUpdater.setup( &server, HTTP_OTA_UPDATE_PATH, HTTP_AUTH_USER, config.conf.http_pw );
   
   server.begin();
 //  MDNS.addService( "http", "tcp", conf.http_server_port );
 }
 
 
+bool authRequired() {
+  // TEST_MODE disabled authentication
+  if ( TEST_MODE ) return false;
+
+  if ( !server.authenticate( HTTP_AUTH_USER, config.conf.http_pw ) ) {
+    server.requestAuthentication( DIGEST_AUTH, auth_realm, auth_fail_response );
+    return true;
+  }
+  return false;
+}
+
 void handleWebRequests(){
   Serial.println( "handleWebRequests: " +  server.uri() );
+
+  if ( authRequired() ) return;  // Page requires authentication
+
   if ( loadFromSpiffs( server.uri() ) ) return;
   
   String message = "File Not Detected\n\n";
@@ -282,6 +298,7 @@ void jsonSensorData() {
 // GET /config
 // Return a JSON string of the current settings
 void jsonConfigData() {
+  if ( authRequired() ) return;  // Page requires authentication
     
   String jsonstr = config.JSON( String(WiFi.macAddress()) );
   
@@ -292,6 +309,8 @@ void jsonConfigData() {
 
 // POST /reset
 void processConfigReset() {
+  if ( authRequired() ) return;  // Page requires authentication
+
   // Delay to give the user a chance to pull the plug
   for (int x=5; x>0; x--) {
     Serial.println("[RESET REQUEST] Clearing config in " + String(x) + "...Reset to stop");
@@ -310,6 +329,8 @@ void processConfigReset() {
 
 // POST /settings
 void processSettings() {
+  if ( authRequired() ) return;  // Page requires authentication
+
   if (server.args() < 6) {
     httpReturn(400, "text/html", "Missing Data");
     return;
@@ -336,6 +357,8 @@ void processSettings() {
 
 // POST /network
 void processNetworkSettings() {
+  if ( authRequired() ) return;  // Page requires authentication
+
   if (server.args() < 2) {
     httpReturn(400, "text/html", "Missing Data");
     return;

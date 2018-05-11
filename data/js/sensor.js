@@ -15,7 +15,6 @@ function displayAlert(msg) {
 }
 
 function updateNetworkConfig(data) {
-
     if (data.hasOwnProperty('ssid'))
         $('input[name=ssid]').val( data['ssid'] );
 
@@ -136,6 +135,7 @@ function saveSettings() {
         displayAlert('Error Saving Settings');
     });
 }
+
 
 function saveNetwork() {
     $('#btn_networkSave').prop("disabled", true);

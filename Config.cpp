@@ -71,6 +71,8 @@ bool Config::set( int key, String value ) {
       else
         return false;
 
+      break;
+
     case CONFIG_DB_NAME:
       strcpy( conf.db_name, value.substring(0, MAX_DB_NAME).c_str() );
       break;
@@ -84,6 +86,8 @@ bool Config::set( int key, String value ) {
         conf.sample_interval = interval;
       else
         return false;
+
+      break;
 
     case CONFIG_DB_MEASUREMENT:
       strcpy( conf.db_measurement, value.substring(0, MAX_DB_MEASUREMENT).c_str() );
