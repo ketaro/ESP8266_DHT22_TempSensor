@@ -331,18 +331,20 @@ void processConfigReset() {
 void processSettings() {
   if ( authRequired() ) return;  // Page requires authentication
 
-  if (server.args() < 6) {
-    httpReturn(400, "text/html", "Missing Data");
-    return;
-  }
+//  if (server.args() < 6) {
+//    httpReturn(400, "text/html", "Missing Data");
+//    return;
+//  }
   
   // Update config with values from form
-  config.set( CONFIG_DB_HOST,         server.arg("db_host") );
-  config.set( CONFIG_DB_PORT,         server.arg("db_port") );
-  config.set( CONFIG_DB_NAME,         server.arg("db_name") );
-  config.set( CONFIG_DB_MEASUREMENT,  server.arg("db_measurement") );
-  config.set( CONFIG_LOCATION,        server.arg("location") );
-  config.set( CONFIG_SAMPLE_INTERVAL, server.arg("interval") );
+  if ( server.hasArg("db_host") )        config.set( CONFIG_DB_HOST,         server.arg("db_host") );
+  if ( server.hasArg("db_port") )        config.set( CONFIG_DB_PORT,         server.arg("db_port") );
+  if ( server.hasArg("db_name") )        config.set( CONFIG_DB_NAME,         server.arg("db_name") );
+  if ( server.hasArg("db_measurement") ) config.set( CONFIG_DB_MEASUREMENT,  server.arg("db_measurement") );
+  if ( server.hasArg("location") )       config.set( CONFIG_LOCATION,        server.arg("location") );
+  if ( server.hasArg("interval") )       config.set( CONFIG_SAMPLE_INTERVAL, server.arg("interval") );
+
+  if ( server.hasArg("http_pw") )        config.set( CONFIG_HTTP_PW,         server.arg("http_pw") );
 
   config.writeConfig();
 

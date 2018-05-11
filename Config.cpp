@@ -97,6 +97,10 @@ bool Config::set( int key, String value ) {
       strcpy( conf.location, value.substring(0, MAX_LOCATION).c_str() );
       break;
 
+    case CONFIG_HTTP_PW:
+      strcpy( conf.http_pw, value.substring(0, MAX_HTTP_PW).c_str() );
+      break;
+
     default:
       Serial.println( "[Config::set] Unknown config key: " + String(key) + " = " + value );
       return false;

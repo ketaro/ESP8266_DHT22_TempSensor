@@ -105,6 +105,13 @@ nav .icon {
     padding-bottom: 5px;
 }
 
+nav .active .icon {
+    fill: #3cbdf7;
+}
+nav a.active {
+    color: #3cbdf7;
+}
+
 section {
     padding-top: 5px;
     padding-left: 15px;

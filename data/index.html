@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>TempSensorBox</title>
+    <title>Temperature Sensor</title>
     <link rel="stylesheet" href="css/sensor.css" />
   </head>
   
@@ -50,7 +50,7 @@
           <aside class="aside">
               <nav class="sidebar">
                   <ul>
-                      <li><a href="#" data-tab="dashboard" class="default">
+                      <li><a href="#" data-tab="dashboard" class="default active">
                             <svg class="icon icon-meter"><use xlink:href="#icon-meter"></use></svg><br/>
                             Dashboard
                           </a></li>
@@ -82,7 +82,10 @@
           
           <section>
               <div class="content-wrapper">
-                <h3 class="content-title">ESP8266 + DHT22 Temp SensorBox</h3>
+                <h3 class="content-title">
+                    <small class="pull-right location">-</small>
+                    Temperature Sensor
+                </h3>
                 
                 <div id="alert" style="display: none;">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">x</span></button>
@@ -298,7 +301,7 @@
 
                         <div class="form-group">
                             <label for="http_pw">Password</label>
-                            <input type="password" name="http_pw" placeholder="saved" maxlength="32" />
+                            <input type="password" name="http_pw" placeholder="saved" maxlength="10" />
                         </div>
 
 

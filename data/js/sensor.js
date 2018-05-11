@@ -5,7 +5,8 @@ function handleNavClick(e) {
     
     $('.tabcontent').css('display', 'none');
     $('#' + selectedTab).css('display', 'block');
-    
+    $('nav a').removeClass('active');
+    $(this).addClass('active');
 }
 
 function displayAlert(msg) {
@@ -36,8 +37,10 @@ function updateSettingsConfig(data) {
     if (data.hasOwnProperty('db_measurement'))
         $('input[name=db_measurement]').val( data['db_measurement'] );
 
-    if (data.hasOwnProperty('location'))
+    if (data.hasOwnProperty('location')) {
         $('input[name=location]').val( data['location'] );
+        $('.location').html( data['location'] );
+    }
 
     if (data.hasOwnProperty('interval'))
         $('select[name=interval]').val( data['interval'] );
@@ -137,6 +140,34 @@ function saveSettings() {
 }
 
 
+function saveSecurity() {
+    $('#btn_accessSave').prop("disabled", true);
+    $('#btn_accessSave').data('origtext', $('#btn_accessSave').html());
+    $('#btn_accessSave').html("Saving...");
+    
+    var data = {
+        http_user: $('input[name=http_user]').val(),
+        http_pw: $('input[name=http_pw]').val(),
+    }
+    
+    $.ajax({
+        url: usehost + "/settings",
+        type: "POST",
+        data: data
+    }).done(function (data) {
+        $('#btn_accessSave').prop("disabled", false);
+        $('#btn_accessSave').html($('#btn_accessSave').data('origtext'));
+
+        // Reload Data
+        getConfigData();
+    }).fail(function( data ) {
+        $('#btn_accessSave').prop("disabled", false);
+        $('#btn_accessSave').html($('#btn_accessSave').data('origtext'));
+        displayAlert('Error Saving Settings');
+    });
+}
+
+
 function saveNetwork() {
     $('#btn_networkSave').prop("disabled", true);
     $('#btn_networkSave').data('origtext', $('#btn_networkSave').html());
@@ -198,6 +229,7 @@ function factoryReset() {
     // button listeners
     $('#btn_settingsSave').click(saveSettings);
     $('#btn_networkSave').click(saveNetwork);
+    $('#btn_accessSave').click(saveSecurity);
     $('#btn_factoryReset').click(factoryReset);
     $('#alert .close').click(function() { $('#alert').hide(); });
 
