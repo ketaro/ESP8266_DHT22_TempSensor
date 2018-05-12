@@ -6,6 +6,10 @@
 #define DHTPIN D4
 #define DHTTYPE DHT22
 
+// Max Runtime (seconds)
+// runtime greater than this interval will cause a reboot
+#define MAX_RUNTIME        60*60*24*30
+
 // Database Types
 #define DB_TYPE_NONE       0
 #define DB_TYPE_INFLUXDB   1

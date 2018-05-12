@@ -30,25 +30,27 @@
  *  OTA Update
  *  http://esp8266.github.io/Arduino/versions/2.0.0/doc/ota_updates/ota_updates.html
  *
+ *  DoubleResetDetector
+ *  https://github.com/datacute/DoubleResetDetector
  */
 
 #include <DHT.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
-#include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <FS.h>
 
 #include "defaults.h"
 #include "Config.h"
+#include "Network.h"
 #include "DB.h"
-
 
 
 //
 // Helper Classes
 Config config;
+Network net;
 DB db;
 
 //
@@ -58,21 +60,13 @@ int poll_sensor_interval   = 5000;    // 5 seconds
 int next_sensor_poll       = poll_sensor_interval;
 int send_to_db_interval    = 30000;    // 30 seconds
 int next_send_to_db        = send_to_db_interval;
-int network_check_interval = 60*5000;  // 5 minutes
-int next_network_check     = network_check_interval;
+
 
 // HTTP Server Globals
 ESP8266WebServer        server(8080);   // Set the HTTP Server port here
 ESP8266HTTPUpdateServer httpUpdater;  // OTA Update Service
 const char* auth_realm    = "ESP8266 TempSensor";
 String auth_fail_response = "Authentication Failed";
-
-// WiFi Globals
-#define ATTEMPTS 5
-String apssid = "ESP-" + String(ESP.getChipId());
-const char *appass = DEFAULT_WIFI_PW;
-String ipaddr;
-bool wifi_connected;
 
 unsigned long lastSensorRead = 0;
 String cur_temp;
@@ -99,6 +93,7 @@ void resetSensor() {
   
   dht.begin();
 }
+
 
 // Attempt to read sensor values from the DHT22
 void readSensors() {
@@ -131,64 +126,6 @@ void readSensors() {
                    "Heat Index:  " + cur_hindex);
 }
 
-//
-// N E T W O R K
-//
-
-void wifiInit() {
-  // Try ATTEMPTS times to get on the network
-  wifiConnect( ATTEMPTS );
-  
-  // If WiFi Connection failed in the first ATTEMPTS*5 seconds of
-  // init, we'll start an AP
-  if ( !networkOK() ) {
-    Serial.println( "WiFi Connection failed, Starting AP..." );
-
-    // Start the access point
-    WiFi.mode( WIFI_AP );
-    WiFi.softAP( apssid.c_str(), appass );
-    ipaddr = WiFi.softAPIP().toString();
-    Serial.println("AP:" + apssid + " Web config IP: http://" + WiFi.softAPIP().toString() + ":8080");
-    wifi_connected = false;
-  }
-}
-
-
-// Attempt to connect to the SSID info in our config.
-void wifiConnect(int attempts) {
-  WiFi.mode( WIFI_STA );
-  WiFi.hostname( config.conf.hostname );
-  WiFi.begin( config.conf.ssid, config.conf.wifi_pw );
-  wifi_connected = false;
-
-  // Try *attempts* times to get on the network
-  Serial.println( "Mac Address: " + WiFi.macAddress() );
-  Serial.print( "Connecting to WiFi (" + String(config.conf.ssid) + ")" );
-  for ( int x=0; x < attempts; x++ ) {
-    if ( WiFi.status() == WL_CONNECTED )
-      break;
-    
-    Serial.print(".");
-    delay(5000);
-  }
-  Serial.println();
-
-  if ( WiFi.status() == WL_CONNECTED ) {
-    ipaddr = WiFi.localIP().toString();
-    Serial.println( "Connected to: " + WiFi.SSID() + "  IP: " + ipaddr );
-    wifi_connected = true;
-  }
-}
-
-
-// Returns true if the wifi is connected
-bool networkOK() {
-  if (WiFi.status() != WL_CONNECTED) {
-    return false;
-  }
-
-  return true;
-}
 
 
 //
@@ -331,11 +268,6 @@ void processConfigReset() {
 void processSettings() {
   if ( authRequired() ) return;  // Page requires authentication
 
-//  if (server.args() < 6) {
-//    httpReturn(400, "text/html", "Missing Data");
-//    return;
-//  }
-  
   // Update config with values from form
   if ( server.hasArg("db_host") )        config.set( CONFIG_DB_HOST,         server.arg("db_host") );
   if ( server.hasArg("db_port") )        config.set( CONFIG_DB_PORT,         server.arg("db_port") );
@@ -399,7 +331,7 @@ void setup() {
   // Start serial
   Serial.begin(115200);
   Serial.println();
-  
+
   // Initialize File System
   SPIFFS.begin();
   Serial.println("File System Initialized");
@@ -407,9 +339,9 @@ void setup() {
   // Turn on DHT22
   send_to_db_interval = config.conf.sample_interval * 1000;
   sensorOn();
-  
-  // Initialize WiFi
-  wifiInit();
+
+  // Initialize Network/WiFi
+  net.begin( config );
 
   // Initialize the web server
   httpInit();
@@ -435,28 +367,30 @@ void loop() {
   }
 
   if (now > next_send_to_db) {  // Time to send readings to the db
-    if (networkOK()) {  // Can't send if we're not connected
+    if ( net.connected() ) {  // Can't send if we're not connected
       db.send( cur_temp, cur_humidity, cur_hindex );
     } else {
-      Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + apssid +
-                     "  IP: " + ipaddr + " (" + WiFi.macAddress() + ")" );
+      Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + net.ssid() +
+                     "  IP: " + net.ipaddr() + " (" + net.macaddr() + ")" );
     }
     next_send_to_db = now + send_to_db_interval;
   }
 
   // Network check to see if we're still connected to wifi
-  if ( now > next_network_check ) {
-    if ( !networkOK() )
-      wifiConnect( ATTEMPTS );
-
-    if ( !networkOK() )
-      WiFi.mode( WIFI_AP );
-
-    next_network_check = now + network_check_interval;
-  }
+  net.loop();
 
   // Handle any HTTP Requests
   server.handleClient();
+
+  if ( now > MAX_RUNTIME * 1000 ) {
+    // If we've been running more than MAX_RUN, just reboot to reset
+    // millis() so we don't have to deal with overflow
+    Serial.println( "----------------------------------" );
+    Serial.println( "MAX RUNTIME REACHED, RESTARTING..." );
+    Serial.println( "----------------------------------" );
+    ESP.restart();
+  }
+
 
 }
 
