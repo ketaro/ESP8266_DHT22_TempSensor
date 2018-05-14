@@ -8,7 +8,7 @@
 #include "Arduino.h"
 #include "Config.h"
 #include "defaults.h"
-
+#include "math.h"
 
 Config::Config() {
   // init EEPROM, all 512 bytes
@@ -99,6 +99,10 @@ bool Config::set( int key, String value ) {
 
     case CONFIG_HTTP_PW:
       strcpy( conf.http_pw, value.substring(0, MAX_HTTP_PW).c_str() );
+      break;
+
+    case CONFIG_T_OFFSET:
+      conf.t_offset = atof(value.c_str());
       break;
 
     default:

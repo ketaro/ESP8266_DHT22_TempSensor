@@ -97,20 +97,21 @@ void resetSensor() {
 
 // Attempt to read sensor values from the DHT22
 void readSensors() {
-    float temp     = dht.readTemperature(true);
+    // Subtract the temperature offset due to heating from the MCU
+    float temp     = dht.readTemperature(true) - config.conf.t_offset;
     float humidity = dht.readHumidity();
 
     if (isnan(humidity) || isnan(temp)) {
       // Successfully failed to get a readout from the DHT22
       Serial.println("DHT22 Error");
-      
+
       // Try to reset the sensor, may the odds be ever in your favor.
       resetSensor();
       delay(3000);
 
       return;
     }
-    
+
     // Successfully got a readout
     float hindex = dht.computeHeatIndex(temp, humidity);
       
@@ -277,6 +278,7 @@ void processSettings() {
   if ( server.hasArg("interval") )       config.set( CONFIG_SAMPLE_INTERVAL, server.arg("interval") );
 
   if ( server.hasArg("http_pw") )        config.set( CONFIG_HTTP_PW,         server.arg("http_pw") );
+  if ( server.hasArg("t_offset") )       config.set( CONFIG_T_OFFSET,        server.arg("t_offset") );
 
   config.writeConfig();
 

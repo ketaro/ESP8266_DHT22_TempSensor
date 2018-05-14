@@ -9,7 +9,7 @@
 #include "Arduino.h"
 #include "defaults.h"
 
-#define CONFIG_VERSION           4
+#define CONFIG_VERSION           5
 #define EEPROM_SIZE              512
 #define EEPROM_CONFIG_START      0
 
@@ -19,6 +19,7 @@
 #define DEFAULT_SSID             "SightUnseenFarm"
 #define DEFAULT_WIFI_PW          "PASSWORD"
 #define DEFAULT_HTTP_PW          "admin"
+#define DEFAULT_T_OFFSET         0
 
 #define CONFIG_HOSTNAME        1
 #define CONFIG_LOCATION        2
@@ -30,6 +31,7 @@
 #define CONFIG_DB_NAME         22
 #define CONFIG_DB_MEASUREMENT  23
 #define CONFIG_SAMPLE_INTERVAL 24
+#define CONFIG_T_OFFSET        25
 
 #define MAX_HOSTNAME  20
 #define MAX_LOCATION  20
@@ -64,6 +66,9 @@ struct configuration {
   char           db_measurement[ MAX_DB_MEASUREMENT+1 ];  // Measurement string
 
   unsigned int sample_interval;
+
+  // Temperature offset
+  float t_offset;
 
 };
 

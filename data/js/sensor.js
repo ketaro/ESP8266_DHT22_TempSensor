@@ -44,6 +44,9 @@ function updateSettingsConfig(data) {
 
     if (data.hasOwnProperty('interval'))
         $('select[name=interval]').val( data['interval'] );
+
+    if (data.hasOwnProperty('t_offset'))
+        $('select[name=t_offset]').val( data['t_offset'] );
 }
 
 
@@ -120,6 +123,7 @@ function saveSettings() {
         db_measurement: $('input[name=db_measurement]').val(),
         location: $('input[name=location]').val(),
         interval: $('select[name=interval]').val(),
+        t_offset: $('input[name=t_offset]').val(),
     }
     
     $.ajax({
