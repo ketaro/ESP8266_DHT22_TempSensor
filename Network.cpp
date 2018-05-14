@@ -9,7 +9,8 @@
 
 Network::Network() {
   // Set the SSID we'll use in AP mode
-  String _ap_ssid = "ESP-" + String(ESP.getChipId());
+  _ap_ssid   = "ESP-" + String(ESP.getChipId());
+  _ap_passwd = DEFAULT_WIFI_PW;
 
   _next_network_check = _network_check_interval;
 }
@@ -58,7 +59,7 @@ bool Network::connected() {
 
 String Network::ssid() { return WiFi.SSID(); }
 String Network::ipaddr() { return _ipaddr; }
-String Network::macaddr() { return WiFi.BSSIDstr(); }
+String Network::macaddr() { WiFi.macAddress(); }
 String Network::hostname() { return WiFi.hostname(); }
 
 
@@ -84,7 +85,7 @@ void Network::connect( int attempts ) {
 
   if ( WiFi.status() == WL_CONNECTED ) {
     _ipaddr = WiFi.localIP().toString();
-    Serial.println( "Connected to: " + ssid() + "  IP: " + _ipaddr );
+    Serial.println( "[Network] Connected to: " + ssid() + "  IP: " + _ipaddr );
     _connected = true;
   }
 
@@ -100,6 +101,6 @@ void Network::start_ap() {
   WiFi.softAP( _ap_ssid.c_str(), _ap_passwd );
   
   _ipaddr = WiFi.softAPIP().toString();
-  Serial.println("AP:" + _ap_ssid + " Web config IP: http://" + _ipaddr + ":8080");  
+  Serial.println("AP SSID:" + _ap_ssid + "  Web config IP: http://" + _ipaddr + ":8080");
 }
 

@@ -17,7 +17,7 @@
 #define DEFAULT_HTTP_PORT        8080
 #define DEFAULT_SAMPLE_INTERVAL  60
 #define DEFAULT_SSID             "SightUnseenFarm"
-#define DEFAULT_WIFI_PW          "PASSWORD"
+#define DEFAULT_WIFI_PW          "PASSWORD"        // Also the default AP password
 #define DEFAULT_HTTP_PW          "admin"
 #define DEFAULT_T_OFFSET         0
 

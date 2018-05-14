@@ -46,7 +46,7 @@ function updateSettingsConfig(data) {
         $('select[name=interval]').val( data['interval'] );
 
     if (data.hasOwnProperty('t_offset'))
-        $('select[name=t_offset]').val( data['t_offset'] );
+        $('input[name=t_offset]').val( data['t_offset'] );
 }
 
 

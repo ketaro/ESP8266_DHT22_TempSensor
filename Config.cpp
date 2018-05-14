@@ -29,7 +29,7 @@ void Config::readConfig() {
 
   // If config version is not something we can upgrade from,
   // set a default config.
-  if ( current_version != 4 ) {
+  if ( current_version != CONFIG_VERSION ) {
     Serial.println( "Unsupported or no config found in EEPROM.  Resettings to defaults." );
     conf = _defaults;
     writeConfig();
@@ -155,7 +155,8 @@ String Config::JSON(String macaddr) {
                        "\"db_measurement\": \"" + String(conf.db_measurement) + "\", "
                        "\"type\": \"influx\", "
                        "\"db_port\": \"" + String(conf.db_port) + "\", "
-                       "\"interval\": \"" + String(conf.sample_interval) + "\""
+                       "\"interval\": \"" + String(conf.sample_interval) + "\", "
+                       "\"t_offset\": \"" + String(conf.t_offset) + "\""
                        "}, "
                    "\"net\": {"
                        "\"ssid\": \"" + String(conf.ssid) + "\", "
