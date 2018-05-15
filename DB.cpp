@@ -34,25 +34,49 @@ void DB::init( Config &config ) {
 }
 
 
+// URL encode a string
+String DB::urlencode( String text ) {
+  String encoded = "";
+
+  // Scan through each character, if it's special, encode it.
+  for (int i=0; i < text.length(); i++) {
+    char c = text.charAt(i);
+
+    if ( c == ' ' )         // Handle spaces
+      encoded += '+';
+    else if ( isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' )  // Unreserved characters..
+      encoded += c;
+    else {
+      // Other characters need to get converted to their hex codes
+      char enchar[5] = "";
+      sprintf(enchar, "%%%X", c);
+      encoded += enchar;
+    }
+
+  }
+
+  return encoded;
+}
+
+
 // Send readings to database
 uint16_t DB::influxDBSend( String cur_temp, String cur_humidity, String cur_hindex ) {
 
   // Build the POST
   String influxout;
-  influxout = "ambient,host=" + String(_config->conf.hostname) + 
-              ",location=" + String(_config->conf.location) + 
-              " temperature=" + cur_temp + 
-              ",humidity=" + cur_humidity + 
+  influxout = urlencode( _config->conf.db_measurement ) + ",host=" + urlencode( _config->conf.hostname ) +
+              ",location=" + urlencode( _config->conf.location ) +
+              " temperature=" + cur_temp +
+              ",humidity=" + cur_humidity +
               ",heat_index=" + cur_hindex;
 
   Serial.println( "[InfluxDB] " + _influx_url );
   Serial.println( "[InfluxDB] " + String(influxout) );
-              
+
   // POST the POST and return the result
   return _http.POST(influxout);
   
 }
-
 
 
 // Send sensor readings to database
