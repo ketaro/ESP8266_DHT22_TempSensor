@@ -58,14 +58,33 @@ String DB::urlencode( String text ) {
   return encoded;
 }
 
+//
+// Escape a string based on the InfluxDB Line Protocol
+String DB::influx_escape( String text ) {
+  String encoded = "";
+
+  // Scan through each character, if it's special, escape it
+  for (int i=0; i < text.length(); i++) {
+    char c = text.charAt(i);
+
+    if ( c == ',' || c == '=' || c == ' ' || c == '"' ) {
+      encoded += "\\";
+      encoded += c;
+    } else
+      encoded += c;
+  }
+
+  return encoded;
+}
+
 
 // Send readings to database
 uint16_t DB::influxDBSend( String cur_temp, String cur_humidity, String cur_hindex ) {
 
   // Build the POST
   String influxout;
-  influxout = urlencode( _config->conf.db_measurement ) + ",host=" + urlencode( _config->conf.hostname ) +
-              ",location=" + urlencode( _config->conf.location ) +
+  influxout = influx_escape( _config->conf.db_measurement ) + ",host=" + influx_escape( _config->conf.hostname ) +
+              ",location=" + influx_escape( _config->conf.location ) +
               " temperature=" + cur_temp +
               ",humidity=" + cur_humidity +
               ",heat_index=" + cur_hindex;

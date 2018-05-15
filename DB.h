@@ -18,6 +18,7 @@ class DB {
     void     send( String cur_temp, String cur_humidity, String cur_hindex );
     uint16_t influxDBSend( String cur_temp, String cur_humidity, String cur_hindex );
     String   urlencode( String text );
+    String   influx_escape( String test );
 
   private:
     String _influx_url;

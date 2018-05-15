@@ -1,4 +1,4 @@
-#define INO_VERSION       "0.3.2"
+#define INO_VERSION       "0.3.4"
 #define TEST_MODE         0   // turns off authentication for local dev
 
 // DHT22 Globals
