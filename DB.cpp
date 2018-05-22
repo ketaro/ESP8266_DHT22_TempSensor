@@ -15,10 +15,10 @@ DB::DB() {
 
 
 // Setup database based on current config values
-void DB::begin( Config &config, Sensor &sensor ) {
-  // Keep a refernce to the config & sensor
-  _config = &config;
-  _sensor = &sensor;
+void DB::begin( Config *config, Sensor *sensor ) {
+  // Keep a reference to the config & sensor
+  _config = config;
+  _sensor = sensor;
   
   // Create the URL we'll be sending influx data to
   _influx_url = "http://" + 

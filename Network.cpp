@@ -9,16 +9,18 @@
 
 Network::Network() {
   // Set the SSID we'll use in AP mode
-  _ap_ssid   = "ESP-" + String(ESP.getChipId());
+  //_ap_ssid   = "ESP-" + String(ESP.getChipId());
+  _ap_ssid   = "ESP-" + String(WiFi.macAddress()).substring(9);
+  _ap_ssid.replace(":", "");
   _ap_passwd = DEFAULT_WIFI_PW;
 
   _next_network_check = _network_check_interval;
 }
 
 
-void Network::begin( Config config ) {
-  // Keep a refernce to the config
-  _config = &config;
+void Network::begin( Config *config ) {
+  // Keep a reference to the config
+  _config = config;
   
   // Try WIFI_CONNECT_ATTEMPTS times to get on the network
   connect( WIFI_CONNECT_ATTEMPTS );
@@ -73,7 +75,7 @@ void Network::connect( int attempts ) {
   Serial.println( "[Network] Mac Address: " + WiFi.macAddress() );
   Serial.print( "[Network] Connecting to WiFi (" + String( _config->conf.ssid ) + ")" );
   for ( int x=0; x < attempts; x++ ) {
-    if ( WiFi.status() == WL_CONNECTED )
+    if ( connected() )
       break;
     
     Serial.print(".");

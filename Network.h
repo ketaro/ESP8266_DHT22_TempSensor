@@ -21,7 +21,7 @@ class Network
 {
   public:
     Network();
-    void begin( Config config );
+    void begin( Config *config );
     void loop();
     bool connected();
     void connect( int attempts );

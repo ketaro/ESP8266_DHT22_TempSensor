@@ -14,9 +14,9 @@
 //};
 
 
-void Sensor::begin( Config config ) {
-  // Keep a refernce to the config
-  _config = &config;
+void Sensor::begin( Config *config ) {
+  // Keep a reference to the config
+  _config = config;
   _poll_sensor_interval = SENSOR_POLL_INTERVAL * 1000;
   _next_sensor_poll = millis() + _poll_sensor_interval;
 

@@ -21,7 +21,7 @@ class Sensor
   public:
     Sensor(uint8_t pin, uint8_t type): _dht(pin, type) { };
 
-    void begin( Config config );
+    void begin( Config *config );
     void loop();
 
     void sensor_on();

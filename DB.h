@@ -14,7 +14,7 @@
 class DB {
   public:
     DB();
-    void     begin( Config &config, Sensor &sensor );
+    void     begin( Config *config, Sensor *sensor );
     void     loop();
     void     send();
     uint16_t influxDBSend( float cur_temp, float cur_humidity, float cur_hindex );

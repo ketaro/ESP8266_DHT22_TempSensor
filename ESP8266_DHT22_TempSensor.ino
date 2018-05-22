@@ -222,7 +222,7 @@ void processSettings() {
   config.writeConfig();
 
   // Tell the DB to re-init with new settings
-  db.begin( config, sensor );
+  db.begin( &config, &sensor );
   send_to_db_interval = config.conf.sample_interval * 1000;
   next_send_to_db = millis() + send_to_db_interval;
 
@@ -280,16 +280,16 @@ void setup() {
   Serial.println("File System Initialized");
   
   // Initialize Network/WiFi
-  net.begin( config );
+  net.begin( &config );
 
   // Initialize the web server
   httpInit();
 
   // Start the temperature sensor
-  sensor.begin( config );
+  sensor.begin( &config );
 
   // Initialize the database library
-  db.begin( config, sensor );
+  db.begin( &config, &sensor );
   send_to_db_interval = config.conf.sample_interval * 1000;
 
 }
