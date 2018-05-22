@@ -41,8 +41,6 @@ class Network
     const char *_ap_passwd = DEFAULT_WIFI_PW;
     String     _ipaddr;
     String     _hostname;
-    bool       _connected;
-
 };
 
 #endif

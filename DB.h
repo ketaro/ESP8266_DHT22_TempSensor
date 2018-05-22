@@ -9,14 +9,15 @@
 #include <ESP8266HTTPClient.h>
 #include "defaults.h"
 #include "Config.h"
-
+#include "Sensor.h"
 
 class DB {
   public:
     DB();
-    void     init( Config &config );
-    void     send( String cur_temp, String cur_humidity, String cur_hindex );
-    uint16_t influxDBSend( String cur_temp, String cur_humidity, String cur_hindex );
+    void     begin( Config &config, Sensor &sensor );
+    void     loop();
+    void     send();
+    uint16_t influxDBSend( float cur_temp, float cur_humidity, float cur_hindex );
     String   urlencode( String text );
     String   influx_escape( String test );
 
@@ -24,6 +25,7 @@ class DB {
     String _influx_url;
     HTTPClient _http;
     Config *_config;
+    Sensor *_sensor;
   
 };
 

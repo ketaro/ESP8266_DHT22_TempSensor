@@ -7,12 +7,17 @@ function handleNavClick(e) {
     $('#' + selectedTab).css('display', 'block');
     $('nav a').removeClass('active');
     $(this).addClass('active');
+    closeAlert();
 }
 
 function displayAlert(msg) {
     console.log('[alert] ' + msg);
     $('#alert p').html(msg);
     $('#alert').show();
+}
+
+function closeAlert() {
+    $('#alert').hide();
 }
 
 function updateNetworkConfig(data) {
@@ -145,14 +150,23 @@ function saveSettings() {
 
 
 function saveSecurity() {
+    // Check that the password fields match
+    if ($('input[name=http_pw]').val() != $('input[name=http_pw_confirm]').val()) {
+        displayAlert('Password fields do not match!');
+        return;
+    }
+    
     $('#btn_accessSave').prop("disabled", true);
     $('#btn_accessSave').data('origtext', $('#btn_accessSave').html());
     $('#btn_accessSave').html("Saving...");
     
     var data = {
         http_user: $('input[name=http_user]').val(),
-        http_pw: $('input[name=http_pw]').val(),
-    }
+    };
+    
+    // Only send a PW if a new one is set
+    if ($('input[name=http_pw]').val() != "")
+        data['http_pw'] = $('input[name=http_pw]').val();
     
     $.ajax({
         url: usehost + "/settings",

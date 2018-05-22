@@ -65,8 +65,6 @@ String Network::hostname() { return WiFi.hostname(); }
 
 // Attempt to connect to the SSID info in our config.
 void Network::connect( int attempts ) {
-  _connected = false;
-
   WiFi.mode( WIFI_STA );
   WiFi.hostname( _config->conf.hostname );
   WiFi.begin( _config->conf.ssid, _config->conf.wifi_pw );
@@ -86,7 +84,6 @@ void Network::connect( int attempts ) {
   if ( WiFi.status() == WL_CONNECTED ) {
     _ipaddr = WiFi.localIP().toString();
     Serial.println( "[Network] Connected to: " + ssid() + "  IP: " + _ipaddr );
-    _connected = true;
   }
 
 }
@@ -95,8 +92,6 @@ void Network::connect( int attempts ) {
 //
 // Start Access Point
 void Network::start_ap() {
-  _connected = false;
-  
   WiFi.mode( WIFI_AP );
   WiFi.softAP( _ap_ssid.c_str(), _ap_passwd );
   

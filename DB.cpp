@@ -8,7 +8,6 @@
 #include "DB.h"
 #include "Config.h"
 
-
 // Init DB Class
 DB::DB() {
   _influx_url = String("");
@@ -16,9 +15,10 @@ DB::DB() {
 
 
 // Setup database based on current config values
-void DB::init( Config &config ) {
-  // Keep a refernce to the config
+void DB::begin( Config &config, Sensor &sensor ) {
+  // Keep a refernce to the config & sensor
   _config = &config;
+  _sensor = &sensor;
   
   // Create the URL we'll be sending influx data to
   _influx_url = "http://" + 
@@ -31,6 +31,10 @@ void DB::init( Config &config ) {
   // Print the influx server info
   Serial.println( "[DB] Influx Server: " + _influx_url );
 
+}
+
+void DB::loop() {
+  
 }
 
 
@@ -79,15 +83,15 @@ String DB::influx_escape( String text ) {
 
 
 // Send readings to database
-uint16_t DB::influxDBSend( String cur_temp, String cur_humidity, String cur_hindex ) {
-
+uint16_t DB::influxDBSend( float temp, float humidity, float hindex ) {
+  
   // Build the POST
   String influxout;
   influxout = influx_escape( _config->conf.db_measurement ) + ",host=" + influx_escape( _config->conf.hostname ) +
               ",location=" + influx_escape( _config->conf.location ) +
-              " temperature=" + cur_temp +
-              ",humidity=" + cur_humidity +
-              ",heat_index=" + cur_hindex;
+              " temperature=" + String(temp, 2) +
+              ",humidity=" + String(humidity, 2) +
+              ",heat_index=" + String(hindex, 2);
 
   Serial.println( "[InfluxDB] " + _influx_url );
   Serial.println( "[InfluxDB] " + String(influxout) );
@@ -100,11 +104,19 @@ uint16_t DB::influxDBSend( String cur_temp, String cur_humidity, String cur_hind
 
 // Send sensor readings to database
 // (if the network is available!)
-void DB::send( String cur_temp, String cur_humidity, String cur_hindex ) {
+void DB::send() {
+  float temp     = _sensor->get_temp();
+  float humidity = _sensor->get_humidity();
+  float hindex   = _sensor->get_hindex();
+
+  if (isnan(temp) || isnan(humidity) || isnan(hindex)) {
+     Serial.println( "[InfluxDB] No Sensor Readings Available to Send!" );
+     return;
+  }
 
   // TODO: Eventually this can be a DB type check
   // when we support more thing that just InfluxDB  
-  uint16_t httpCode = influxDBSend( cur_temp, cur_humidity, cur_hindex );
+  uint16_t httpCode = influxDBSend( temp, humidity, hindex );
 
   // Parse the return
   // HTTP Code 204 is successful for influxDB.

@@ -34,7 +34,6 @@
  *  https://github.com/datacute/DoubleResetDetector
  */
 
-#include <DHT.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
@@ -44,6 +43,7 @@
 #include "defaults.h"
 #include "Config.h"
 #include "Network.h"
+#include "Sensor.h"
 #include "DB.h"
 
 
@@ -52,80 +52,19 @@
 Config config;
 Network net;
 DB db;
+Sensor sensor(DHTPIN, DHTTYPE);
 
 //
 // GLOBALS
 //
-int poll_sensor_interval   = 5000;    // 5 seconds
-int next_sensor_poll       = poll_sensor_interval;
 int send_to_db_interval    = 30000;    // 30 seconds
 int next_send_to_db        = send_to_db_interval;
-
 
 // HTTP Server Globals
 ESP8266WebServer        server(8080);   // Set the HTTP Server port here
 ESP8266HTTPUpdateServer httpUpdater;  // OTA Update Service
 const char* auth_realm    = "ESP8266 TempSensor";
 String auth_fail_response = "Authentication Failed";
-
-unsigned long lastSensorRead = 0;
-String cur_temp;
-String cur_humidity;
-String cur_hindex;
-DHT dht(DHTPIN, DHTTYPE);
-
-
-//
-// S E N S O R
-//
-void sensorOn() {
-  // Main Sensor Turn On
-  pinMode(DHTPWR, OUTPUT);
-  digitalWrite(DHTPWR, 1);
-}
-
-void resetSensor() {
-  digitalWrite(DHTPWR, 0);
-  digitalWrite(DHTPWR, 1);
-  
-  Serial.println("Resetting Sensor...");
-  delay(2000);
-  
-  dht.begin();
-}
-
-
-// Attempt to read sensor values from the DHT22
-void readSensors() {
-    // Subtract the temperature offset due to heating from the MCU
-    float temp     = dht.readTemperature(true) - config.conf.t_offset;
-    float humidity = dht.readHumidity();
-
-    if (isnan(humidity) || isnan(temp)) {
-      // Successfully failed to get a readout from the DHT22
-      Serial.println("DHT22 Error");
-
-      // Try to reset the sensor, may the odds be ever in your favor.
-      resetSensor();
-      delay(3000);
-
-      return;
-    }
-
-    // Successfully got a readout
-    float hindex = dht.computeHeatIndex(temp, humidity);
-      
-    // Set the current globals for stuff.
-    cur_temp     = String(temp, 2);
-    cur_humidity = String(humidity, 2);
-    cur_hindex   = String(hindex, 2);
-    lastSensorRead = millis();
-
-    // Write out to serial
-    Serial.println("Temp: "        + cur_temp + "F   " 
-                   "Humidity: "    + cur_humidity + "%  "
-                   "Heat Index:  " + cur_hindex);
-}
 
 
 
@@ -228,7 +167,7 @@ void httpReturn(uint16_t httpcode, String mimetype, String content) {
 // GET /sensors
 // Return Sensor Values in a JSON string
 void jsonSensorData() {
-  String jsonstr = "{\"hum\": " + cur_humidity + ", \"hidx\": " + cur_hindex + ", \"temp\": " + cur_temp + "}";
+  String jsonstr = "{\"hum\": " + String(sensor.get_humidity()) + ", \"hidx\": " + String(sensor.get_hindex()) + ", \"temp\": " + String(sensor.get_temp()) + "}";
   httpReturn(200, "application/json", jsonstr);
 }
 
@@ -283,7 +222,9 @@ void processSettings() {
   config.writeConfig();
 
   // Tell the DB to re-init with new settings
-  db.init( config );
+  db.begin( config, sensor );
+  send_to_db_interval = config.conf.sample_interval * 1000;
+  next_send_to_db = millis() + send_to_db_interval;
 
   // Success to the client.
   httpReturn(200, "application/json", "{\"status\": \"ok\"}");
@@ -338,10 +279,6 @@ void setup() {
   SPIFFS.begin();
   Serial.println("File System Initialized");
   
-  // Turn on DHT22
-  send_to_db_interval = config.conf.sample_interval * 1000;
-  sensorOn();
-
   // Initialize Network/WiFi
   net.begin( config );
 
@@ -349,10 +286,11 @@ void setup() {
   httpInit();
 
   // Start the temperature sensor
-  dht.begin();
+  sensor.begin( config );
 
   // Initialize the database library
-  db.init( config );
+  db.begin( config, sensor );
+  send_to_db_interval = config.conf.sample_interval * 1000;
 
 }
 
@@ -360,31 +298,23 @@ void setup() {
 // Main Arduino Loop
 void loop() {
 
-  // note: this will overflow after ~50 days
-  unsigned long now = millis();
+  sensor.loop();
+  net.loop();
 
-  if (now > next_sensor_poll) {   // Time to read the sensors
-    readSensors();
-    next_sensor_poll = now + poll_sensor_interval;
-  }
-
-  if (now > next_send_to_db) {  // Time to send readings to the db
+  if (millis() > next_send_to_db) {  // Time to send readings to the db
     if ( net.connected() ) {  // Can't send if we're not connected
-      db.send( cur_temp, cur_humidity, cur_hindex );
+      db.send();
     } else {
       Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + net.ssid() +
                      "  IP: " + net.ipaddr() + " (" + net.macaddr() + ")" );
     }
-    next_send_to_db = now + send_to_db_interval;
+    next_send_to_db = millis() + send_to_db_interval;
   }
-
-  // Network check to see if we're still connected to wifi
-  net.loop();
 
   // Handle any HTTP Requests
   server.handleClient();
 
-  if ( now > MAX_RUNTIME * 1000 ) {
+  if ( millis() > MAX_RUNTIME ) {
     // If we've been running more than MAX_RUN, just reboot to reset
     // millis() so we don't have to deal with overflow
     Serial.println( "----------------------------------" );
@@ -392,7 +322,6 @@ void loop() {
     Serial.println( "----------------------------------" );
     ESP.restart();
   }
-
 
 }
 
