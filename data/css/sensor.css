@@ -27,6 +27,7 @@ h3 small {
 }
 .wrapper {
     position: relative;
+    margin-bottom: 50px;
 }
 
 .tabcontent {
@@ -39,6 +40,7 @@ h3 small {
     position: fixed;
     bottom: -100px;
     right: -100px;
+    z-index: -500;
 }
 .watermark svg {
     font-size: 500px;
@@ -107,6 +109,13 @@ nav .icon {
     padding-bottom: 5px;
 }
 
+nav .active .icon {
+    fill: #3cbdf7;
+}
+nav a.active {
+    color: #3cbdf7;
+}
+
 section {
     padding-top: 5px;
     padding-left: 15px;
@@ -114,6 +123,40 @@ section {
     position: relative;
     height: 100%;
     display: block;
+}
+
+#alert {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    border: 1px solid #0000002e;
+    
+    padding: 10px 30px;
+    margin-bottom: 10px;
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 1.0em;
+}
+
+button.close {
+    position: relative;
+    top: -2px;
+    right: -21px;
+    color: inherit;
+
+    -webkit-appearance: none;
+    padding: 0;
+    cursor: pointer;
+    background: 0 0;
+    border: 0;
+    
+    float: right;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
+    
+    text-shadow: 0 1px 0 #fff;
+    filter: alpha(opacity=20);
+    opacity: .2;
 }
 
 #footer {
@@ -220,4 +263,9 @@ section {
 }
 .btn-danger {
     background-color: #920000;
+}
+
+button:disabled {
+    background-color: #8ac;
+    cursor: not-allowed;
 }
