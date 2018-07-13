@@ -59,6 +59,11 @@
                             <svg class="icon icon-connection"><use xlink:href="#icon-connection"></use></svg><br/>
                             Network
                           </a></li>
+
+                      <li><a href="#" data-tab="sensor">
+                            <svg class="icon icon-database"><use xlink:href="#icon-database"></use></svg><br/>
+                            Sensor
+                            </a></li>
                           
                       <li><a href="#" data-tab="database">
                             <svg class="icon icon-database"><use xlink:href="#icon-database"></use></svg><br/>
@@ -151,6 +156,136 @@
                 
                 </div>
 
+
+                <div id="sensor" class="tabcontent">
+                    <div class="watermark">
+                        <svg><use xlink:href="#icon-database"></use></svg>
+                    </div>
+                    
+                    <h3>Sensor Settings<br/>
+                        <small>Use the settings below to configure the attached sensors.</small>
+                    </h3>
+                    
+                    <form id="settingsForm">
+                        
+                        <table>
+                          <tr>
+                              <td></td>
+                              <td></td>
+                              <td>Min Input</td>
+                              <td>Max Input</td>
+                              <td>Min Output</td>
+                              <td>Max Output</td>
+                          </tr>
+                          <tr>
+                            <td>Analog 0</td>
+                            <td class="form-group">
+                                <select>
+                                    <option>Not Active</option>
+                                    <option>Active</option>
+                                </select>
+                            </td>
+                            
+                            <td class="form-group"><input type="text" name="min_input" value="0.0" />v</td>
+                            <td class="form-group"><input type="text" name="max_input" value="3.2" />v</td>
+                            <td class="form-group"><input type="text" name="min_output" /></td>
+                            <td class="form-group"><input type="text" name="min_output" /></td>
+                            <td class="form-group">
+                                <input type="text" name="unit" value="psi" />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Digital 0</td>
+                            <td>
+                                <select>
+                                    <option>Not Active</option>
+                                    <option>Input</option>
+<!--                                     <option>Output</option> -->
+                                    <option>PWM</option>
+                                    <option>DHT22 (Temp/Hum)</option>
+                                </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Digital 1</td>
+                            <td>
+                                <select>
+                                    <option>Not Active</option>
+                                    <option selected="selected">Input</option>
+                                    <option>Output</option>
+                                    <option>PWM</option>
+                                    <option>DHT22 (Temp/Hum)</option>
+                                </select>
+                            </td>
+                            <td class="form-group">
+                                <input type="text" name="measurement" value="" placeholder="measurement" />
+                            </td>
+
+                          </tr>
+                          <tr>
+                            <td>Digital 2</td>
+                            <td>
+                                <select>
+                                    <option>Not Active</option>
+                                    <option>Input</option>
+<!--                                     <option >Output</option> -->
+                                    <option selected="selected">PWM</option>
+                                    <option>DHT22 (Temp/Hum)</option>
+                                </select>
+                            </td>
+                            <td class="form-group">
+                                <input type="number" name="pwm_value" min="0" max="100" />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Digital 4</td>
+                            <td>
+                                <select>
+                                    <option>Not Active</option>
+                                    <option>Input</option>
+                                    <option>Output</option>
+                                    <option>PWM</option>
+                                    <option selected="selected">DHT22 (Temp/Hum)</option>
+                                </select>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <td>Digital 8</td>
+                            <td>
+                                <select>
+                                    <option selected="selected">Not Active</option>
+                                    <option>Input</option>
+                                    <option>Output</option>
+                                    <option>PWM</option>
+                                    <option>DHT22 (Temp/Hum)</option>
+                                </select>
+                            </td>
+                          </tr>
+
+                        </table>
+<!--                        
+                        <div class="form-group">
+                            <label for="db_type"></label>
+                            <select name="db_type">
+                                <option value="1">InfluxDB</option>
+                                <option value="2">HTTP</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="db_host">DB Host/IP</label>
+                            <input type="text" name="db_host" placeholder="Hostname or IP Address" maxlength="64" />
+                        </div>
+-->
+
+                        <div class="form-group">
+                            <button id="btn_settingsSave" class="btn" type="button">Save Settings</button>
+                        </div>
+                    </form>
+
+                </div>
+
                                 
                 <div id="database" class="tabcontent">
                     <div class="watermark">
@@ -164,9 +299,10 @@
                     
                     <form id="settingsForm">
                         <div class="form-group">
-                            <label for="dbtype">Database Type</label>
-                            <select name="dbtype">
-                                <option value="influxdb">InfluxDB</option>
+                            <label for="db_type">Database Type</label>
+                            <select name="db_type">
+                                <option value="1">InfluxDB</option>
+                                <option value="2">HTTP</option>
                             </select>
                         </div>
                         

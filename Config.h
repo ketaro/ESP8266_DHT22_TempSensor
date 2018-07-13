@@ -32,6 +32,7 @@
 #define CONFIG_DB_MEASUREMENT  23
 #define CONFIG_SAMPLE_INTERVAL 24
 #define CONFIG_T_OFFSET        25
+#define CONFIG_DB_TYPE         26
 
 #define MAX_HOSTNAME  20
 #define MAX_LOCATION  20
@@ -41,6 +42,11 @@
 #define MAX_DB_HOST   64
 #define MAX_DB_NAME   20
 #define MAX_DB_MEASUREMENT 20
+
+// Database Types
+#define DB_TYPE_NONE       0
+#define DB_TYPE_INFLUXDB   1
+#define DB_TYPE_HTTP       2
 
 
 //
@@ -59,7 +65,7 @@ struct configuration {
   char wifi_pw[ MAX_WIFI_PW+1 ];
 
   // Database Settings
-  byte           db_type;             // 0 - none, 1 - influxdb
+  byte           db_type;             // 0 - none, 1 - influxdb, 2 - http
   char           db_host[ MAX_DB_HOST+1 ];
   unsigned short db_port;
   char           db_name[ MAX_DB_NAME+1 ];

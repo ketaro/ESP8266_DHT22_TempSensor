@@ -10,6 +10,24 @@ function handleNavClick(e) {
     closeAlert();
 }
 
+function handleDBTypeChange(e) {
+    console.log('changed');
+    if ($('select[name=db_type]').val() == "2") {    // HTTP
+        $('input[name=db_port]').parent().hide();
+        $('input[name=db_name]').parent().hide();
+        $('input[name=db_measurement]').parent().hide();
+        $('label[for=db_host]').text("HTTP URL");
+        $('input[name=db_host]').attr('placeholder', 'url');
+    } else {
+        $('input[name=db_port]').parent().show();
+        $('input[name=db_name]').parent().show();
+        $('input[name=db_measurement]').parent().show();
+        $('label[for=db_host]').text("DB Host/IP");
+        $('input[name=db_host]').attr('placeholder', 'Hostname or IP Address');
+    }
+}
+
+
 function displayAlert(msg) {
     console.log('[alert] ' + msg);
     $('#alert p').html(msg);
@@ -30,6 +48,9 @@ function updateNetworkConfig(data) {
 
 
 function updateSettingsConfig(data) {
+    if (data.hasOwnProperty('db_type'))
+        $('select[name=db_type]').val( data['db_type'] );
+
     if (data.hasOwnProperty('db_name'))
         $('input[name=db_name]').val( data['db_name'] );
 
@@ -81,7 +102,8 @@ function getConfigData() {
 
         if (data.hasOwnProperty('db'))
             updateSettingsConfig( data['db'] );
-        
+
+        handleDBTypeChange();
        
     }).fail(function( data ) {
         displayAlert('Error retrieving config data');
@@ -121,7 +143,7 @@ function saveSettings() {
     $('#btn_settingsSave').html("Saving...");
     
     var data = {
-        db_type: $('select[name=dbtype]').val(),
+        db_type: $('select[name=db_type]').val(),
         db_host: $('input[name=db_host]').val(),
         db_port: $('input[name=db_port]').val(),
         db_name: $('input[name=db_name]').val(),
@@ -215,6 +237,7 @@ function saveNetwork() {
     });    
 }
 
+
 function factoryReset() {
     $('#btn_factoryReset').prop("disabled", true);
     $('#btn_factoryReset').data('origtext', $('#btn_factoryReset').html());
@@ -250,6 +273,8 @@ function factoryReset() {
     $('#btn_accessSave').click(saveSecurity);
     $('#btn_factoryReset').click(factoryReset);
     $('#alert .close').click(function() { $('#alert').hide(); });
+
+    $('select[name=db_type]').change(handleDBTypeChange);
 
     getConfigData();
     getSensorReading();

@@ -57,6 +57,18 @@ bool Config::set( int key, String value ) {
       strcpy( conf.wifi_pw, value.substring(0, MAX_WIFI_PW).c_str() );
       break;
 
+    case CONFIG_DB_TYPE:
+      // Convert string to int.  Valid range 0 - 2
+      unsigned short dbtype;
+      dbtype = value.toInt();
+
+      if ( dbtype >= 0 && dbtype < 3 )
+        conf.db_type = dbtype;
+      else
+        return false;
+
+      break;
+    
     case CONFIG_DB_HOST:
       strcpy( conf.db_host, value.substring(0, MAX_DB_HOST).c_str() );
       break;
@@ -153,7 +165,7 @@ String Config::JSON(String macaddr) {
                        "\"db_host\": \"" + String(conf.db_host) + "\", "
                        "\"location\": \"" + String(conf.location) + "\", "
                        "\"db_measurement\": \"" + String(conf.db_measurement) + "\", "
-                       "\"type\": \"influx\", "
+                       "\"db_type\": \"" + String(conf.db_type) + "\", "
                        "\"db_port\": \"" + String(conf.db_port) + "\", "
                        "\"interval\": \"" + String(conf.sample_interval) + "\", "
                        "\"t_offset\": \"" + String(conf.t_offset) + "\""

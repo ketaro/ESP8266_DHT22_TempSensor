@@ -88,7 +88,7 @@ void Sensor::read_sensor() {
 
     // Successfully got a readout
     _last_sensor_read = millis();
-      
+ 
     _cur_temp     = temp;
     _cur_humidity = humidity;
     _cur_hindex   = _dht.computeHeatIndex(temp, humidity);

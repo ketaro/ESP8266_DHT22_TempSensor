@@ -21,12 +21,16 @@ void DB::begin( Config *config, Sensor *sensor ) {
   _sensor = sensor;
   
   // Create the URL we'll be sending influx data to
-  _influx_url = "http://" + 
-                String(_config->conf.db_host) + ":" + String(_config->conf.db_port) +
-                "/write?db=" + String(_config->conf.db_name);
+  _influx_url = "";
+  if (_config->conf.db_type == DB_TYPE_INFLUXDB) {
+    _influx_url = "http://" + 
+                  String(_config->conf.db_host) + ":" + String(_config->conf.db_port) +
+                  "/write?db=" + String(_config->conf.db_name);
 
-  // Start the HTTP Client connection
-  _http.begin( _influx_url );
+    // Start the HTTP Client connection
+    _http.begin( _influx_url );
+  }
+
 
   // Print the influx server info
   Serial.println( "[DB] Influx Server: " + _influx_url );
@@ -114,14 +118,18 @@ void DB::send() {
      return;
   }
 
-  // TODO: Eventually this can be a DB type check
-  // when we support more thing that just InfluxDB  
-  uint16_t httpCode = influxDBSend( temp, humidity, hindex );
+  if (_config->conf.db_type == DB_TYPE_INFLUXDB) {
+    uint16_t httpCode = influxDBSend( temp, humidity, hindex );
 
-  // Parse the return
-  // HTTP Code 204 is successful for influxDB.
-  if (httpCode != HTTP_CODE_OK && httpCode != 204) {
-    Serial.println( "[DB] INFLUX HTTP ERROR: " + String(httpCode) );
+    // Parse the return
+    // HTTP Code 204 is successful for influxDB.
+    if (httpCode != HTTP_CODE_OK && httpCode != 204) {
+      Serial.println( "[DB] INFLUX HTTP ERROR: " + String(httpCode) );
+    }
+
+  } else if (_config->conf.db_type == DB_TYPE_HTTP) {
+    // TODO HTTP CALL
+    Serial.println( "[DB] IF AN HTTP CALL WAS CONFIGURED IT WOULD HAPPEN HERE." );
   }
 
 }
