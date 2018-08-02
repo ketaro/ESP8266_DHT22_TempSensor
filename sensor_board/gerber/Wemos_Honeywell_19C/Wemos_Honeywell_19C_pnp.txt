@@ -4,7 +4,7 @@
 *eMail=
 *
 *Project=Wemos_Honeywell_19C
-*Date=15:55:02
+*Date=16:27:19
 *CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
 *
 *
@@ -48,7 +48,7 @@
 33;;;22.207;-9.8267;0;Bottom;TXT1
 34;;;4.84646;-2.15629;0;Bottom;TXT1
 35;;;4.81711;-12.3177;0;Bottom;TXT1
-36;;THT;24.8737;-11.2754;0;Bottom;J3
-37;;THT;2.01366;-11.2754;180;Bottom;J2
-38;;;7.30801;-34.8403;-90;Bottom;TXT9
-39;;power_jack_slot;21.8129;-35.8612;180;Bottom;J5
+36;;power_jack_pth;20.825;-36.7267;180;Bottom;J5
+37;;THT;24.8737;-11.2754;0;Bottom;J3
+38;;THT;2.01366;-11.2754;180;Bottom;J2
+39;;;7.30801;-34.8403;-90;Bottom;TXT9
