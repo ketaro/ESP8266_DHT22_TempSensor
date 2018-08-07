@@ -254,12 +254,32 @@ function factoryReset() {
 
         // Reload Data
         getConfigData();
-    }).fail(function( data ) {
+    }).fail(function(jqXHR, textStatus) {
         $('#btn_factoryReset').prop("disabled", false);
         $('#btn_factoryReset').html($('#btn_factoryReset').data('origtext'));
         displayAlert('Error Requesting Factory Reset');
     });    
 
+}
+
+// Request an online update start
+function onlineUpdate() {
+    $('#btn_onlineupdate').prop("disabled", true);
+    $('#btn_onlineupdate').data('origtext', $('#btn_onlineupdate').html());
+    $('#btn_onlineupdate').html("Requesting Update...");
+
+    $.ajax({
+        url: usehost + "/webupdate",
+        type: "POST"
+    }).done(function(data) {
+       displayAlert('Online update requested...');
+ 
+    }).fail(function(jqXHR, textStatus) {
+        $('#btn_onlineupdate').prop("disabled", false);
+        $('#btn_onlineupdate').html($('#btn_onlineupdate').data('origtext'));
+
+        displayAlert('Error Requesting Online Update');
+    });
 }
 
 
@@ -272,6 +292,7 @@ function factoryReset() {
     $('#btn_networkSave').click(saveNetwork);
     $('#btn_accessSave').click(saveSecurity);
     $('#btn_factoryReset').click(factoryReset);
+    $('#btn_onlineUpdate').click(onlineUpdate);
     $('#alert .close').click(function() { $('#alert').hide(); });
 
     $('select[name=db_type]').change(handleDBTypeChange);

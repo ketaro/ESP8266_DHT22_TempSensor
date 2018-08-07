@@ -7,13 +7,14 @@
 #define Webserver_h
 
 #include <ESP8266HTTPUpdateServer.h>
+#include <ESP8266HTTPClient.h>
 
 #include "defaults.h"
 #include "Config.h"
 #include "Sensor.h"
 #include "DB.h"
 
-#define SPIFFS_CHECK_INTERVAL 60*5
+#define FW_CHECK_INTERVAL 60*60*24
 
 
 //
@@ -33,12 +34,15 @@ class Webserver
     Sensor                   *_sensor;
     DB                       *_db;
     ESP8266HTTPUpdateServer  _httpUpdater;  // OTA Update Service
+    HTTPClient               _client;
+
     const char* auth_realm    = "ESP8266 TempSensor";
     String auth_fail_response = "Authentication Failed";
 
-    int _spiffs_check_interval  = SPIFFS_CHECK_INTERVAL * 1000;
-    int _next_spiffs_check      = _spiffs_check_interval;
-    unsigned long _last_spifss_check = 0;
+    String _spiffs_version  = "";
+    int _fw_check_interval  = FW_CHECK_INTERVAL * 1000;
+    int _next_fw_check      = _fw_check_interval;
+    unsigned long _last_fw_check = 0;
 
     bool authRequired();
     void handleWebRequests();
@@ -48,7 +52,10 @@ class Webserver
     void processConfigReset();
     void processSettings();
     void processNetworkSettings();
-    void spiffs_check_for_update();
+    String get_spiffs_version();
+    void check_for_fwupdate();
+    void check_for_spiffs_update();
+    void runWebUpdate();
 };
 
 #endif

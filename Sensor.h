@@ -26,11 +26,14 @@ class Sensor
 
     void sensor_on();
     void read_sensor();
+    void read_analog();
     void reset_sensor();
     
     float get_temp();
     float get_humidity();
     float get_hindex();
+    float get_analog();
+    float get_pressure();
     
   private:
     Config     *_config;
@@ -44,6 +47,7 @@ class Sensor
     float _cur_temp       = NAN;
     float _cur_humidity   = NAN;
     float _cur_hindex     = NAN;
+    float _cur_analog     = NAN;
 
 };
 

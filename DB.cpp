@@ -105,6 +105,24 @@ uint16_t DB::influxDBSend( float temp, float humidity, float hindex ) {
   
 }
 
+// Send analog readings to database
+uint16_t DB::influxDBAnalogSend( String measurement, float reading, float pressure ) {
+  
+  // Build the POST
+  String influxout;
+  influxout = influx_escape( measurement ) + ",host=" + influx_escape( _config->conf.hostname ) +
+              ",location=" + influx_escape( _config->conf.location ) +
+              " analog=" + String(reading, 2) +
+              ",pressure=" + String(pressure, 2);
+
+  Serial.println( "[InfluxDB] " + _influx_url );
+  Serial.println( "[InfluxDB] " + String(influxout) );
+
+  // POST the POST and return the result
+  return _http.POST(influxout);
+  
+}
+
 
 // Send sensor readings to database
 // (if the network is available!)
@@ -112,19 +130,34 @@ void DB::send() {
   float temp     = _sensor->get_temp();
   float humidity = _sensor->get_humidity();
   float hindex   = _sensor->get_hindex();
-
-  if (isnan(temp) || isnan(humidity) || isnan(hindex)) {
-     Serial.println( "[InfluxDB] No Sensor Readings Available to Send!" );
-     return;
-  }
+  float analog   = _sensor->get_analog();
+  float pressure = _sensor->get_pressure();
 
   if (_config->conf.db_type == DB_TYPE_INFLUXDB) {
-    uint16_t httpCode = influxDBSend( temp, humidity, hindex );
+    // Send Temp Sensor
+    if (isnan(temp) || isnan(humidity) || isnan(hindex)) {
+       Serial.println( "[InfluxDB] No Temp Sensor Readings Available to Send!" );
+    } else {
+      uint16_t httpCode = influxDBSend( temp, humidity, hindex );
+  
+      // Parse the return
+      // HTTP Code 204 is successful for influxDB.
+      if (httpCode != HTTP_CODE_OK && httpCode != 204) {
+        Serial.println( "[DB] INFLUX HTTP ERROR: " + String(httpCode) );
+      }
+    }
 
-    // Parse the return
-    // HTTP Code 204 is successful for influxDB.
-    if (httpCode != HTTP_CODE_OK && httpCode != 204) {
-      Serial.println( "[DB] INFLUX HTTP ERROR: " + String(httpCode) );
+    // Send Analog
+    if (isnan(analog) || isnan(pressure)) {
+       Serial.println( "[InfluxDB] No Analog Sensor Readings Available to Send!" );
+    } else {
+      uint16_t httpCode = influxDBAnalogSend( "analog", analog, pressure );
+      
+      // Parse the return
+      // HTTP Code 204 is successful for influxDB.
+      if (httpCode != HTTP_CODE_OK && httpCode != 204) {
+        Serial.println( "[DB] INFLUX HTTP ERROR: " + String(httpCode) );
+      }
     }
 
   } else if (_config->conf.db_type == DB_TYPE_HTTP) {

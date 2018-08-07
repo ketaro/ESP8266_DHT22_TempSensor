@@ -43,6 +43,10 @@
         <title>spinner9</title>
         <path d="M16 0c-8.711 0-15.796 6.961-15.995 15.624 0.185-7.558 5.932-13.624 12.995-13.624 7.18 0 13 6.268 13 14 0 1.657 1.343 3 3 3s3-1.343 3-3c0-8.837-7.163-16-16-16zM16 32c8.711 0 15.796-6.961 15.995-15.624-0.185 7.558-5.932 13.624-12.995 13.624-7.18 0-13-6.268-13-14 0-1.657-1.343-3-3-3s-3 1.343-3 3c0 8.837 7.163 16 16 16z"></path>
         </symbol>
+        <symbol id="icon-thermometer-half" viewBox="0 0 32 32">
+        <title>thermometer-half</title>
+        <path d="M16.986 23.166c1.173 0.408 2.014 1.523 2.014 2.834 0 1.657-1.343 3-3 3s-3-1.343-3-3c0-1.311 0.841-2.426 2.014-2.834-0.009-0.055-0.014-0.111-0.014-0.168v-9.995c0-0.547 0.448-1.002 1-1.002 0.556 0 1 0.449 1 1.002v9.995c0 0.057-0.005 0.113-0.014 0.168v0zM18 22.535v-18.532c0-1.107-0.888-2.004-2-2.004-1.105 0-2 0.89-2 2.004v18.532c-1.196 0.692-2 1.984-2 3.465 0 2.209 1.791 4 4 4s4-1.791 4-4c0-1.481-0.804-2.773-2-3.465zM19.969 21.5c1.246 1.099 2.031 2.708 2.031 4.5 0 3.314-2.686 6-6 6s-6-2.686-6-6c0-1.792 0.786-3.401 2.031-4.5-0.021-0.165-0.031-0.332-0.031-0.503v-16.994c0-2.205 1.791-4.003 4-4.003 2.205 0 4 1.792 4 4.003v16.994c0 0.17-0.011 0.338-0.031 0.503v0 0z"></path>
+        </symbol>
         </defs>
     </svg>
         
@@ -61,7 +65,7 @@
                           </a></li>
 
                       <li><a href="#" data-tab="sensor">
-                            <svg class="icon icon-database"><use xlink:href="#icon-database"></use></svg><br/>
+                            <svg class="icon icon-thermometer-half"><use xlink:href="#icon-thermometer-half"></use></svg><br/>
                             Sensor
                             </a></li>
                           
@@ -145,14 +149,27 @@
                         </small>
                     </h3>
 
-                    <p>
-                    Current Firmware Version: <span class="conf_ino_ver">x.x.x</span>
-                    </p>
+                    <table border="0">
+                      <tr>
+                        <td>Current Firmware Version:</td>
+                        <td class="conf_ino_ver">x.x.x</td>
+                      </tr>
+                      <tr>
+                        <td>Current UI Version:</td>
+                        <td class="conf_spifss_ver">xxxx</td>
+                      </tr>
+                    </table>
                     
                     <form method='POST' action='/firmware' enctype='multipart/form-data'>
                         <input type='file' name='update'>
                         <input type='submit' value='Update Firmware' class="btn">
                     </form>
+                    <br/>
+                    
+                    <div>
+                        <em>A firmware update is available online.</em>
+                        <button id="btn_onlineupdate" type="button" class="btn">Download Update</button>
+                    </div>
                 
                 </div>
 
@@ -280,7 +297,7 @@
 -->
 
                         <div class="form-group">
-                            <button id="btn_settingsSave" class="btn" type="button">Save Settings</button>
+                            <button id="btn_sensorSave" class="btn" type="button">Save Settings</button>
                         </div>
                     </form>
 
@@ -465,7 +482,10 @@
 
       <div id="footer">
           <span class="conf_hostname"></span> (<span class="conf_mac"><i>Loading settings, please wait...</i></span>)
-          <div class="pull-right">Version <span class="conf_ino_ver">x.x.x</span></div>
+          <div class="pull-right">
+              Firmware Version <span class="conf_ino_ver">x.x.x</span>, 
+              UI 1.0.0
+          </div>
       </div>
       
 

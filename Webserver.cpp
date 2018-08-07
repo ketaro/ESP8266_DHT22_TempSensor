@@ -4,6 +4,8 @@
 //
 
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
 #include <FS.h>
 
 #include "Webserver.h"
@@ -26,10 +28,16 @@ void Webserver::begin( Config *config, Sensor *sensor, DB *db ) {
   _sensor = sensor;  // Keep a reference to the sensor library
   _db     = db;      // Keep a reference to the db library
 
-  _spiffs_check_interval = SPIFFS_CHECK_INTERVAL * 1000;
-  _next_spiffs_check = millis() + _spiffs_check_interval;
+  // See if we can find the version of the SPIFFS that we're running
+  _spiffs_version = get_spiffs_version();
+
+  _fw_check_interval = FW_CHECK_INTERVAL * 1000;
+  _next_fw_check = millis() + _fw_check_interval;
 
   Serial.println( "[Webserver] HTTP INIT, hostname: " + String( _config->conf.hostname ) + "  port: " + String( _config->conf.http_server_port ) );
+  Serial.println( "SPIFFS Version: " + _spiffs_version );
+  
+
 //  MDNS.begin( conf.hostname );
 
   // HTTP callbacks bound to class member functions
@@ -39,10 +47,11 @@ void Webserver::begin( Config *config, Sensor *sensor, DB *db ) {
   server.on("/reset",    HTTP_POST, std::bind(&Webserver::processConfigReset, this));
   server.on("/sensors",  HTTP_GET,  std::bind(&Webserver::jsonSensorData, this));
   server.on("/settings", HTTP_POST, std::bind(&Webserver::processSettings, this));
+  server.on("/webupdate", HTTP_POST, std::bind(&Webserver::runWebUpdate, this));
   server.onNotFound(std::bind( &Webserver::handleWebRequests, this));
 
   // Attach the OTA update service
-  _httpUpdater.setup( &server, HTTP_OTA_UPDATE_PATH, HTTP_AUTH_USER, _config->conf.http_pw );
+  _httpUpdater.setup(&server, HTTP_OTA_UPDATE_PATH, HTTP_AUTH_USER, _config->conf.http_pw);
   
   server.begin();
 }
@@ -52,15 +61,77 @@ void Webserver::loop() {
   // Handle any HTTP Requests
   server.handleClient();
 
-  if (millis() > _spiffs_check_interval) {   // Time to check for updated files
-    _next_spiffs_check = millis() + _spiffs_check_interval;
-    spiffs_check_for_update();
+  if (millis() > _next_fw_check) {   // Time to check for updated files
+    _next_fw_check = millis() + _fw_check_interval;
+    check_for_spiffs_update();
   }
 }
 
 
-void Webserver::spiffs_check_for_update() {
+void Webserver::check_for_fwupdate() {
+  Serial.println("[Webserver] checking for Firmware updates");
+
+  t_httpUpdate_return ret = ESPhttpUpdate.update(UPDATE_URL, INO_VERSION);
+//  ret = ESPhttpUpdate.updateSpiffs(UPDATE_URL, INO_VERSION);
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("[Webserver] HTTP update failed.  Error (%d): %s\n", 
+          ESPhttpUpdate.getLastError(),
+          ESPhttpUpdate.getLastErrorString().c_str());
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("[Webserver] No remote update found.");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("[Webserver] Remote Firmware update succeeded!");
+      break;
+  }
+
+}
+
+
+String Webserver::get_spiffs_version() {
+  File versionFile = SPIFFS.open("/version.txt", "r");
+
+  if (!versionFile) {
+    Serial.println("[Webserver] Failed to open /version.txt, unknown SPIFFS version!");
+    return String("");
+  }
+
+  if (versionFile.size() > 25) {
+    Serial.println("[Webserver] /version.txt is too large!");
+    return String("");
+  }
+
+  return versionFile.readString();
   
+}
+
+void Webserver::check_for_spiffs_update() {
+  Serial.println("[Webserver] checking for SPIFFS updates");
+
+  t_httpUpdate_return ret = ESPhttpUpdate.updateSpiffs(UPDATE_URL, String(INO_VERSION) + ":" + _spiffs_version);
+//  ret = ESPhttpUpdate.updateSpiffs(UPDATE_URL, INO_VERSION);
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("[Webserver] HTTP SPIFFS update failed.  Error (%d): %s\n", 
+          ESPhttpUpdate.getLastError(),
+          ESPhttpUpdate.getLastErrorString().c_str());
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("[Webserver] No remote SPIFFS update found.");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("[Webserver] Remote SPIFFS update succeeded!");
+      break;
+  }
+
 }
 
 
@@ -153,7 +224,11 @@ bool Webserver::authRequired() {
 // GET /sensors
 // Return Sensor Values in a JSON string
 void Webserver::jsonSensorData() {
-  String jsonstr = "{\"hum\": " + String(_sensor->get_humidity()) + ", \"hidx\": " + String(_sensor->get_hindex()) + ", \"temp\": " + String(_sensor->get_temp()) + "}";
+  String jsonstr = "{\"hum\": " + String(_sensor->get_humidity()) + 
+                   ", \"hidx\": " + String(_sensor->get_hindex()) + 
+                   ", \"temp\": " + String(_sensor->get_temp()) +
+                   ", \"analog\": " + String(_sensor->get_analog()) +
+                   ", \"pressure\": " + String(_sensor->get_pressure()) + "}";
   httpReturn(200, "application/json", jsonstr);
 }
 
@@ -239,3 +314,8 @@ void Webserver::processNetworkSettings() {
   WiFi.disconnect( true );
   setup();
 }
+
+void Webserver::runWebUpdate() {
+}
+
+

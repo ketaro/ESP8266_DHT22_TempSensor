@@ -18,6 +18,7 @@ class DB {
     void     loop();
     void     send();
     uint16_t influxDBSend( float cur_temp, float cur_humidity, float cur_hindex );
+    uint16_t influxDBAnalogSend( String measurement, float reading, float pressure );
     String   urlencode( String text );
     String   influx_escape( String test );
 

@@ -60,10 +60,18 @@ void Sensor::reset_sensor() {
 float Sensor::get_temp()     { return _cur_temp; }
 float Sensor::get_humidity() { return _cur_humidity; }
 float Sensor::get_hindex()   { return _cur_hindex; }
+float Sensor::get_analog()   { return _cur_analog; }
+float Sensor::get_pressure() {
+  if (_cur_analog)
+    return map(_cur_analog, 0, 1023, 0, 200); 
+  return NAN;
+}
 
 
 // Attempt to read sensor values from the DHT22
 void Sensor::read_sensor() {
+    Serial.println("[Sensor] read_sensor");
+
     // Subtract the temperature offset due to heating from the MCU
     float temp     = _dht.readTemperature(true) - _config->conf.t_offset;
     float humidity = _dht.readHumidity();
@@ -83,20 +91,34 @@ void Sensor::read_sensor() {
         _cur_hindex   = NAN;
       }
 
-      return;
+    } else {
+      // Successfully got a readout
+      _last_sensor_read = millis();
+   
+      _cur_temp     = temp;
+      _cur_humidity = humidity;
+      _cur_hindex   = _dht.computeHeatIndex(temp, humidity);
+
+      // Write out to serial
+      Serial.println("[Sensor] Temp: " + String(_cur_temp, 2) + "F   " 
+                    "Humidity: " + String(_cur_humidity, 2) + "%   "
+                    "Heat Index: " + String(_cur_hindex, 2));
     }
 
-    // Successfully got a readout
-    _last_sensor_read = millis();
- 
-    _cur_temp     = temp;
-    _cur_humidity = humidity;
-    _cur_hindex   = _dht.computeHeatIndex(temp, humidity);
+    // Calculate Pressure
+    read_analog();
+}
 
-    // Write out to serial
-    Serial.println("[Sensor] Temp: " + String(_cur_temp, 2) + "F   " 
-                   "Humidity: " + String(_cur_humidity, 2) + "%   "
-                   "Heat Index: " + String(_cur_hindex, 2));
+
+// Sample the analog sensor
+void Sensor::read_analog() {
+  int sum = 0;
+  for(int i=0; i < 32; i++) {
+    delayMicroseconds(100);
+    sum += analogRead(PRESSURE_PIN);
+  }
+  _cur_analog = float(sum) / 32.0;
+  Serial.println("[Sensor] Analog Sensor: " + String(_cur_analog));
 }
 
 

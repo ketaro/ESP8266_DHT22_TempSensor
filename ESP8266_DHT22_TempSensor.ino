@@ -69,6 +69,11 @@ void setup() {
   // Start serial
   Serial.begin(115200);
   Serial.println();
+
+  Serial.println("---------------------------");
+  Serial.println("HEATSTROKE INO: " + String(INO_VERSION));
+  Serial.println("---------------------------");
+  Serial.println();
  
   // Initialize Network/WiFi
   net.begin( &config );
@@ -82,13 +87,12 @@ void setup() {
 
   // Initialize File System and Web Server
   web.begin( &config, &sensor, &db );
-
+  delay(500);
 }
 
 
 // Main Arduino Loop
 void loop() {
-
   sensor.loop();
   net.loop();
   web.loop();
@@ -97,8 +101,7 @@ void loop() {
     if ( net.connected() ) {  // Can't send if we're not connected
       db.send();
     } else {
-      Serial.println("[NO NETWORK] Cannot send to DB.  AP: " + net.ssid() +
-                     "  IP: " + net.ipaddr() + " (" + net.macaddr() + ")" );
+      Serial.println("[NO NETWORK] Cannot send to DB.");
     }
     next_send_to_db = millis() + send_to_db_interval;
   }
