@@ -63,7 +63,7 @@ float Sensor::get_hindex()   { return _cur_hindex; }
 float Sensor::get_analog()   { return _cur_analog; }
 float Sensor::get_pressure() {
   if (_cur_analog)
-    return map(_cur_analog, 0, 1023, 0, 200); 
+    return ((_cur_analog / 1024) * 200) - 3.35; // dirty offset removal  
   return NAN;
 }
 
@@ -112,12 +112,12 @@ void Sensor::read_sensor() {
 
 // Sample the analog sensor
 void Sensor::read_analog() {
-  int sum = 0;
-  for(int i=0; i < 32; i++) {
-    delayMicroseconds(100);
+  uint16_t sum = 0;
+  for(int i=0; i < 64; i++) {
+    delay(5);
     sum += analogRead(PRESSURE_PIN);
   }
-  _cur_analog = float(sum) / 32.0;
+  _cur_analog = float(sum) / 64.0;
   Serial.println("[Sensor] Analog Sensor: " + String(_cur_analog));
 }
 
